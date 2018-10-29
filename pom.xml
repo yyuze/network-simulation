@@ -13,11 +13,4 @@
         <module>layer</module>
     </modules>
 
-
-    <!--<dependencies>-->
-        <!--<dependency>-->
-            <!--<groupId>apache</groupId>-->
-            <!--<artifactId>log4j</artifactId>-->
-        <!--</dependency>-->
-    <!--</dependencies>-->
 </project>
