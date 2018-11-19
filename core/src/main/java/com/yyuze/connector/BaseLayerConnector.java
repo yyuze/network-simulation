@@ -13,31 +13,31 @@ import java.util.ArrayList;
  * 负责为层与层之间提供数据传递接口
  * </p>
  */
-public abstract class BaseLayerConnector<PKG extends BasePackage, LAYER extends BaseLayer> {
+public abstract class BaseLayerConnector<PKG extends BasePackage, UPPERLAYER extends BaseLayer, LOWERLAYER extends BaseLayer> {
 
     /**
      * 通道的上层
      */
-    protected LAYER lowerLayer;
+    protected UPPERLAYER upperLayer;
 
     /**
      * 通道的下层
      */
-    protected LAYER upperLayer;
+    protected LOWERLAYER lowerLayer;
 
-    public LAYER getLowerLayer() {
+    public LOWERLAYER getLowerLayer() {
         return lowerLayer;
     }
 
-    public void setLowerLayer(LAYER lowerLayer) {
+    public void setLowerLayer(LOWERLAYER lowerLayer) {
         this.lowerLayer = lowerLayer;
     }
 
-    public LAYER getUpperLayer() {
+    public UPPERLAYER getUpperLayer() {
         return upperLayer;
     }
 
-    public void setUpperLayer(LAYER upperLayer) {
+    public void setUpperLayer(UPPERLAYER upperLayer) {
         this.upperLayer = upperLayer;
     }
 

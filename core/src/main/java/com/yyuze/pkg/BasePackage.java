@@ -9,7 +9,7 @@ import com.yyuze.layer.BaseLayer;
  * 每一层使用的协议数据包的基类
  * </p>
  */
-public abstract class BasePackage<LAYER extends BaseLayer> {
+public class BasePackage<LAYER extends BaseLayer> {
 
     protected LAYER layer;
 
