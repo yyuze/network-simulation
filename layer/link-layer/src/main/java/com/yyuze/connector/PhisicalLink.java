@@ -1,6 +1,6 @@
 package com.yyuze.connector;
 
-import com.yyuze.device.LinkInterface;
+import com.yyuze.device.NetworkAdapter;
 import com.yyuze.pkg.Frame;
 
 /**
@@ -13,12 +13,12 @@ public class PhisicalLink {
 
     private Long[] avaliableTimeFrame;
 
-    private LinkInterface[] linkInterfaces;
+    private NetworkAdapter[] networkAdapters;
 
-    public void transfer(LinkInterface sender, Frame frame) {
-        for(LinkInterface linkInterface : linkInterfaces){
-            if(!linkInterface.MAC.equals(sender.MAC)){
-                linkInterface.receive(frame);
+    public void transfer(Frame frame) {
+        for(NetworkAdapter networkAdapter : networkAdapters){
+            if(!networkAdapter.MAC.equals(frame.getSourceMAC())){
+                networkAdapter.receive(frame);
             }
         }
     }
