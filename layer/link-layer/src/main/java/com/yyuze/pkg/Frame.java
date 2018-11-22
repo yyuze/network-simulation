@@ -6,7 +6,7 @@ package com.yyuze.pkg;
  */
 public class Frame {
 
-    private Long preamble;
+    private Character[] preamble = new Character[]{0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101011};
 
     private Long targetMAC;
 
@@ -18,11 +18,11 @@ public class Frame {
 
     private Long CRC;
 
-    public Long getPreamble() {
+    public Character[] getPreamble() {
         return preamble;
     }
 
-    public void setPreamble(Long preamble) {
+    public void setPreamble(Character[] preamble) {
         this.preamble = preamble;
     }
 

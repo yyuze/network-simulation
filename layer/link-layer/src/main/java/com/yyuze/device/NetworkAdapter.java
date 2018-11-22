@@ -12,6 +12,8 @@ import java.util.ArrayList;
  */
 public class NetworkAdapter {
 
+    private static Long GENERATOR_CRC32 = 0b100000100110000010001110110110111L;
+
     public Long MAC;
 
     private AddressResolutionProtocolTable arpTable;
@@ -20,21 +22,21 @@ public class NetworkAdapter {
 
     private ArrayList<Frame> buffer;
 
-    //todo get a IP package
-    public void receiveFromNetworkLayer(String networkLayerData){
+    public void joinLink(PhisicalLink link){
+        this.link = link;
+        this.link.join(this);
+    }
 
+    //todo get a IP package
+    public void receiveFromNetworkLayer(String networkLayerData) {
         Frame frame = new Frame();
-        //todo ???
-        frame.setPreamble(0l);
         frame.setSourceMAC(this.MAC);
-        frame.setTargetMAC(this.arpTable.getMACByIP(0l));
+        frame.setTargetMAC(this.arpTable.getMACByIP(0L));
         //todo IP pakage constructure
         frame.setPayload("");
         frame.setType('a');
-        //todo hashCRC
-        frame.setCRC(0l);
+        frame.setCRC(this.generateCRC(frame.getPayload()));
         this.buffer.add(frame);
-
     }
 
     public void send() {
@@ -44,10 +46,27 @@ public class NetworkAdapter {
         }
     }
 
-    public void receive(Frame frame) {
+    public void receiveFromLink(Frame frame) {
         if (frame.getTargetMAC().equals(this.MAC)) {
-            this.buffer.add(frame);
+            if (this.isCorrect(frame)) {
+                this.buffer.add(frame);
+            }
         }
+    }
+
+    private boolean isCorrect(Frame frame) {
+        Long crc = frame.getCRC();
+        if (crc % NetworkAdapter.GENERATOR_CRC32 == 0) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    private Long generateCRC(String payload) {
+        //todo CRC algorithm
+        return 0L;
     }
 
     @Override
