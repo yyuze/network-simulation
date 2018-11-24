@@ -22,6 +22,10 @@ public class NetworkAdapter {
 
     private ArrayList<Frame> buffer;
 
+    public NetworkAdapter(){
+
+    }
+
     public void joinLink(PhisicalLink link){
         this.link = link;
         this.link.join(this);
