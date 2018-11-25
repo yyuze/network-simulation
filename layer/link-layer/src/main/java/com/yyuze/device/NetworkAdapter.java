@@ -12,7 +12,34 @@ import java.util.ArrayList;
  */
 public class NetworkAdapter {
 
-    private static Long GENERATOR_CRC32 = 0b100000100110000010001110110110111L;
+    private CRCTool crcTool = new CRCTool();
+
+    private class CRCTool {
+
+        private Long GENERATOR_CRC32 = 0b100000100110000010001110110110111L;
+
+        public Long getCRC(String data) {
+            byte[] bytes = data.getBytes();
+            Long result = 0L;
+            for (byte b : bytes) {
+                result = this.xor(result, ((long) b) << 32);
+            }
+            return result % this.GENERATOR_CRC32;
+        }
+
+        public boolean check(String data,Long crc) {
+            byte[] bytes = data.getBytes();
+            Long result = 0L;
+            for (byte b : bytes) {
+                result = this.xor(result, (long) b);
+            }
+            return xor(result, crc) % this.GENERATOR_CRC32 == 0;
+        }
+
+        private Long xor(Long num1, Long num2) {
+            return (~(num1 & num2)) & (num1 | num2);
+        }
+    }
 
     public Long MAC;
 
@@ -22,11 +49,8 @@ public class NetworkAdapter {
 
     private ArrayList<Frame> buffer;
 
-    public NetworkAdapter(){
 
-    }
-
-    public void joinLink(PhisicalLink link){
+    public void joinLink(PhisicalLink link) {
         this.link = link;
         this.link.join(this);
     }
@@ -39,7 +63,7 @@ public class NetworkAdapter {
         //todo IP pakage constructure
         frame.setPayload("");
         frame.setType('a');
-        frame.setCRC(this.generateCRC(frame.getPayload()));
+        frame.setCRC(this.generateCRC(frame));
         this.buffer.add(frame);
     }
 
@@ -52,25 +76,18 @@ public class NetworkAdapter {
 
     public void receiveFromLink(Frame frame) {
         if (frame.getTargetMAC().equals(this.MAC)) {
-            if (this.isCorrect(frame)) {
+            if (this.check(frame)) {
                 this.buffer.add(frame);
             }
         }
     }
 
-    private boolean isCorrect(Frame frame) {
-        Long crc = frame.getCRC();
-        if (crc % NetworkAdapter.GENERATOR_CRC32 == 0) {
-            return true;
-        } else {
-            return false;
-        }
-
+    private boolean check(Frame frame) {
+        return this.crcTool.check(frame.getPayload(),frame.getCRC());
     }
 
-    private Long generateCRC(String payload) {
-
-        return 0L;
+    private Long generateCRC(Frame frame) {
+        return this.crcTool.getCRC(frame.getPayload());
     }
 
     @Override
@@ -82,4 +99,5 @@ public class NetworkAdapter {
             return false;
         }
     }
+
 }

@@ -1,9 +1,11 @@
 package com.yyuze.device;
 
+import com.yyuze.pkg.Frame;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.zip.CRC32;
 
 /**
  * Author: yyuze
@@ -12,16 +14,50 @@ import java.lang.reflect.Method;
 public class NetworkAdapterTest {
 
     @Test
-    public void generateCRCTest(){
+    public void checkTest(){
         NetworkAdapter networkAdapter = new NetworkAdapter();
+        Frame frame = new Frame();
+        frame.setPayload("hello world");
+        frame.setCRC(1822254807L);
         try {
-            Method generateCRC = networkAdapter.getClass().getDeclaredMethod("generateCRC", String.class);
-            Long checkSum = (Long)generateCRC.invoke(networkAdapter,"");
-            System.out.print(checkSum);
+            Method check = networkAdapter.getClass().getDeclaredMethod("check", Frame.class);
+            check.setAccessible(true);
+            if((Boolean) check.invoke(networkAdapter,frame)){
+                System.out.println("test passed");
+            }else {
+                System.out.println("test failed");
+            }
+
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void generateCRCTest(){
+        NetworkAdapter networkAdapter = new NetworkAdapter();
+        Frame frame = new Frame();
+        frame.setPayload("hello world");
+        try {
+            Method generateCRC = networkAdapter.getClass().getDeclaredMethod("generateCRC", Frame.class);
+            generateCRC.setAccessible(true);
+            Long crc = (Long)generateCRC.invoke(networkAdapter,frame);
+            //测试是否与权威CRC相同
+            CRC32 crc32 = new CRC32();
+            crc32.update(frame.getPayload().getBytes());
+            System.out.println(crc);
+            System.out.println(crc32.getValue());
+            if(crc == crc32.getValue()){
+                System.out.println("test passed");
+            }else {
+                System.out.println("test failed");
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
     @Test
     public void bitCalculeteTest(){
@@ -40,5 +76,12 @@ public class NetworkAdapterTest {
         }
         c>>=8;
         System.out.println("\n0"+Long.toBinaryString(c));
+    }
+
+    //(~(num1&num2))&(num1|num2)
+    @Test
+    public void xorTest(){
+        System.out.println((~(1&1))&(1|1));
+        System.out.println((~(1&0))&(1|0));
     }
 }
