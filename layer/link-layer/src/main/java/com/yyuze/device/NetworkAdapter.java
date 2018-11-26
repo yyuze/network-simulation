@@ -3,6 +3,7 @@ package com.yyuze.device;
 import com.yyuze.connector.PhisicalLink;
 import com.yyuze.pkg.Frame;
 import com.yyuze.table.AddressResolutionProtocolTable;
+import com.yyuze.tool.CRC;
 
 import java.util.ArrayList;
 
@@ -12,36 +13,9 @@ import java.util.ArrayList;
  */
 public class NetworkAdapter {
 
-    private CRCTool crcTool = new CRCTool();
+    private CRC crcTool = new CRC();
 
-    private class CRCTool {
-
-        private Long GENERATOR_CRC32 = 0b100000100110000010001110110110111L;
-
-        public Long getCRC(String data) {
-            byte[] bytes = data.getBytes();
-            Long result = 0L;
-            for (byte b : bytes) {
-                result = this.xor(result, ((long) b) << 32);
-            }
-            return result % this.GENERATOR_CRC32;
-        }
-
-        public boolean check(String data,Long crc) {
-            byte[] bytes = data.getBytes();
-            Long result = 0L;
-            for (byte b : bytes) {
-                result = this.xor(result, (long) b);
-            }
-            return xor(result, crc) % this.GENERATOR_CRC32 == 0;
-        }
-
-        private Long xor(Long num1, Long num2) {
-            return (~(num1 & num2)) & (num1 | num2);
-        }
-    }
-
-    public Long MAC;
+    public long MAC;
 
     private AddressResolutionProtocolTable arpTable;
 
@@ -75,7 +49,7 @@ public class NetworkAdapter {
     }
 
     public void receiveFromLink(Frame frame) {
-        if (frame.getTargetMAC().equals(this.MAC)) {
+        if (frame.getTargetMAC() == this.MAC) {
             if (this.check(frame)) {
                 this.buffer.add(frame);
             }
@@ -83,18 +57,18 @@ public class NetworkAdapter {
     }
 
     private boolean check(Frame frame) {
-        return this.crcTool.check(frame.getPayload(),frame.getCRC());
+        return this.crcTool.check(frame.getPayload(), frame.getCRC());
     }
 
-    private Long generateCRC(Frame frame) {
-        return this.crcTool.getCRC(frame.getPayload());
+    private long generateCRC(Frame frame) {
+        return this.crcTool.generateCRC(frame.getPayload());
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj.getClass().equals(NetworkAdapter.class)) {
             NetworkAdapter another = (NetworkAdapter) obj;
-            return this.MAC.equals(another.MAC);
+            return this.MAC == another.MAC;
         } else {
             return false;
         }
