@@ -8,15 +8,15 @@ public class Frame {
 
     private Character[] preamble = new Character[]{0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101011};
 
-    private Long targetMAC;
+    private long targetMAC;
 
-    private Long sourceMAC;
+    private long sourceMAC;
 
     private char type;
 
     private String payload;
 
-    private Long CRC;
+    private Integer CRC;
 
     public Character[] getPreamble() {
         return preamble;
@@ -26,19 +26,19 @@ public class Frame {
         this.preamble = preamble;
     }
 
-    public Long getTargetMAC() {
+    public long getTargetMAC() {
         return targetMAC;
     }
 
-    public void setTargetMAC(Long targetMAC) {
+    public void setTargetMAC(long targetMAC) {
         this.targetMAC = targetMAC;
     }
 
-    public Long getSourceMAC() {
+    public long getSourceMAC() {
         return sourceMAC;
     }
 
-    public void setSourceMAC(Long sourceMAC) {
+    public void setSourceMAC(long sourceMAC) {
         this.sourceMAC = sourceMAC;
     }
 
@@ -58,11 +58,11 @@ public class Frame {
         this.payload = payload;
     }
 
-    public Long getCRC() {
+    public Integer getCRC() {
         return CRC;
     }
 
-    public void setCRC(Long CRC) {
+    public void setCRC(Integer CRC) {
         this.CRC = CRC;
     }
 }

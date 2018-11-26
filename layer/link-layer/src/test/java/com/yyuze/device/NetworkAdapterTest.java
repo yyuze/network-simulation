@@ -18,7 +18,7 @@ public class NetworkAdapterTest {
         NetworkAdapter networkAdapter = new NetworkAdapter();
         Frame frame = new Frame();
         frame.setPayload("hello world");
-        frame.setCRC(1822254807L);
+        frame.setCRC(1822254807);
         try {
             Method check = networkAdapter.getClass().getDeclaredMethod("check", Frame.class);
             check.setAccessible(true);
@@ -41,7 +41,7 @@ public class NetworkAdapterTest {
         try {
             Method generateCRC = networkAdapter.getClass().getDeclaredMethod("generateCRC", Frame.class);
             generateCRC.setAccessible(true);
-            Long crc = (Long)generateCRC.invoke(networkAdapter,frame);
+            long crc = (long)generateCRC.invoke(networkAdapter,frame);
             //测试是否与权威CRC相同
             CRC32 crc32 = new CRC32();
             crc32.update(frame.getPayload().getBytes());
@@ -59,29 +59,4 @@ public class NetworkAdapterTest {
 
 
 
-    @Test
-    public void bitCalculeteTest(){
-        byte[] buf = {'a','b',1,2,3};
-        long c = 0;
-        for(byte b:buf){
-            String number = Long.toBinaryString(b);
-            if(number.length()<8){
-                for(int i=number.length();i<8;i++){
-                    number = "0"+number;
-                }
-            }
-            System.out.print(number);
-            c|=b;
-            c<<=8;
-        }
-        c>>=8;
-        System.out.println("\n0"+Long.toBinaryString(c));
-    }
-
-    //(~(num1&num2))&(num1|num2)
-    @Test
-    public void xorTest(){
-        System.out.println((~(1&1))&(1|1));
-        System.out.println((~(1&0))&(1|0));
-    }
 }

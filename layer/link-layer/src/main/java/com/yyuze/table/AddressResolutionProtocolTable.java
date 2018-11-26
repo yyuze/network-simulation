@@ -10,7 +10,7 @@ package com.yyuze.table;
  */
 public class AddressResolutionProtocolTable {
 
-    public Long getMACByIP(Long IP){
+    public long getMACByIP(long IP){
         return 0L;
     }
 }
