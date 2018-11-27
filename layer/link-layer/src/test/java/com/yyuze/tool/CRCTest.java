@@ -76,6 +76,6 @@ public class CRCTest {
     @AfterAll
     @Test
     public static void finish() {
-        System.out.println("CRC test finished");
+        System.out.println("CRC test finished\n");
     }
 }

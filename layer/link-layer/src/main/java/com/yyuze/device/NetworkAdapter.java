@@ -11,6 +11,12 @@ import java.util.ArrayList;
  * Author: yyuze
  * Time: 2018-11-19
  */
+
+/**
+ * 使用协议：
+ * 数据校验：CRC
+ * 多路访问：CSMA/CD
+ */
 public class NetworkAdapter {
 
     private CRC crcTool = new CRC();

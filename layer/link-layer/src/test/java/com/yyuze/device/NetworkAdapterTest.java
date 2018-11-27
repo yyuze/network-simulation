@@ -1,11 +1,13 @@
 package com.yyuze.device;
 
 import com.yyuze.pkg.Frame;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.zip.CRC32;
 
 /**
  * Author: yyuze
@@ -13,50 +15,56 @@ import java.util.zip.CRC32;
  */
 public class NetworkAdapterTest {
 
+    private static NetworkAdapter networkAdapter;
+
+    @BeforeAll
     @Test
-    public void checkTest(){
-        NetworkAdapter networkAdapter = new NetworkAdapter();
+    public static void initNetworkAdapterTest() {
+        System.out.println("NetworkAdapter test start");
+        networkAdapter = new NetworkAdapter();
+    }
+
+    @DisplayName("NetworkAdapter.check()")
+    @Test
+    public void checkTest() {
         Frame frame = new Frame();
         frame.setPayload("hello world");
-        frame.setCRC(1822254807);
+        frame.setCRC(488123962L);
         try {
             Method check = networkAdapter.getClass().getDeclaredMethod("check", Frame.class);
             check.setAccessible(true);
-            if((Boolean) check.invoke(networkAdapter,frame)){
-                System.out.println("test passed");
-            }else {
-                System.out.println("test failed");
-            }
-
+            assert (boolean) check.invoke(networkAdapter, frame) : "failed";
+            System.out.println("check() passed");
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
     }
 
+    @DisplayName("NetworkAdapter.generateCRC()")
     @Test
-    public void generateCRCTest(){
+    public void generateCRCTest() {
         NetworkAdapter networkAdapter = new NetworkAdapter();
-        Frame frame = new Frame();
-        frame.setPayload("hello world");
+        Frame frame1 = new Frame();
+        frame1.setPayload("hello world");
+        Frame frame2 = new Frame();
+        frame2.setPayload("hello worle");
         try {
             Method generateCRC = networkAdapter.getClass().getDeclaredMethod("generateCRC", Frame.class);
             generateCRC.setAccessible(true);
-            long crc = (long)generateCRC.invoke(networkAdapter,frame);
-            //测试是否与权威CRC相同
-            CRC32 crc32 = new CRC32();
-            crc32.update(frame.getPayload().getBytes());
-            System.out.println(crc);
-            System.out.println(crc32.getValue());
-            if(crc == crc32.getValue()){
-                System.out.println("test passed");
-            }else {
-                System.out.println("test failed");
-            }
+            long crc1 = (long) generateCRC.invoke(networkAdapter, frame1);
+            long crc2 = (long) generateCRC.invoke(networkAdapter, frame2);
+            assert crc1 != crc2 : "failed";
+            System.out.println("generateCRCTest() passed");
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
     }
 
+    @AfterAll
+    @Test
+    public static void finished() {
+        System.out.println("NetworkAdapter test finished\n");
+    }
 
 
 }
