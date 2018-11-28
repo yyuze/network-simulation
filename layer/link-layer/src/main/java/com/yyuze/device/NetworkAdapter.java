@@ -6,6 +6,7 @@ import com.yyuze.table.AddressResolutionProtocolTable;
 import com.yyuze.tool.CRC;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Author: yyuze
@@ -29,12 +30,75 @@ public class NetworkAdapter {
 
     private ArrayList<Frame> buffer;
 
+    private int collisionCounter;
+
+    private MessageContorller messageContorller;
+
+    private class MessageContorller {
+
+        private long BIT_TIME_512;
+
+        private Random randomTool;
+
+        private long transferAllow;
+
+        public MessageContorller() {
+            this.BIT_TIME_512 = 512000000 / PhisicalLink.BANDWIDTH;
+            this.transferAllow = this.getMicrotimeStamp();
+            this.randomTool = new Random();
+        }
+
+        private long getMicrotimeStamp() {
+            return System.nanoTime() / 1000;
+        }
+
+        private long generateBinaryExponentialBackoff() {
+            return this.randomTool.nextInt((int) Math.pow(2, collisionCounter)) * this.BIT_TIME_512;
+        }
+
+        private void pause() {
+            this.transferAllow += this.generateBinaryExponentialBackoff();
+        }
+
+        private void reset() {
+            this.transferAllow = this.getMicrotimeStamp();
+        }
+
+        private boolean isAllowedTransfer() {
+            return this.transferAllow <= this.getMicrotimeStamp();
+        }
+
+    }
 
     public void joinLink(PhisicalLink link) {
         this.link = link;
         this.link.join(this);
     }
 
+    /**
+     *将缓存区中的帧发送至链路
+     */
+    public void sendToLink() {
+        if (this.messageContorller.isAllowedTransfer()) {
+            for (Frame frame : buffer) {
+                if (!this.link.transmit(frame)) {
+                    this.collisionCounter++;
+                    this.messageContorller.pause();
+                    break;
+                } else {
+                    this.messageContorller.reset();
+                    this.buffer.remove(frame);
+                    this.collisionCounter = 0;
+                }
+
+            }
+        }
+    }
+
+    /**
+     * 提供给网络层传输数据的api
+     * @param networkLayerData 网络层传下来的数据
+     */
     //todo get a IP package
     public void receiveFromNetworkLayer(String networkLayerData) {
         Frame frame = new Frame();
@@ -47,13 +111,10 @@ public class NetworkAdapter {
         this.buffer.add(frame);
     }
 
-    public void send() {
-        for (Frame frame : buffer) {
-            this.link.transfer(frame);
-            this.buffer.remove(frame);
-        }
-    }
-
+    /**
+     * 提供给链路传入数据的api
+     * @param frame 从链路获取的帧
+     */
     public void receiveFromLink(Frame frame) {
         if (frame.getTargetMAC() == this.MAC) {
             if (this.check(frame)) {

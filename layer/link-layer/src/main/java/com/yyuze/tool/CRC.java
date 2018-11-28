@@ -61,7 +61,7 @@ public class CRC {
     }
 
     /**
-     * 使用2算术求余数
+     * 使用模2算术求余数
      * @param devided 被除数
      * @param devidor 除数
      * @return 余数

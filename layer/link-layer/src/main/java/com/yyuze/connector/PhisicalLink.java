@@ -41,10 +41,11 @@ public class PhisicalLink {
         this.networkAdapters.add(networkAdapter);
     }
 
-    public void transfer(Frame frame) {
+    public boolean transmit(Frame frame) {
         this.frameInLink = frame;
         this.boardcastFrameInLink();
         this.drop();
+        return false;
     }
 
     private void boardcastFrameInLink() {
