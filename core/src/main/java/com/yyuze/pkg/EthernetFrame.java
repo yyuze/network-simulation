@@ -4,18 +4,36 @@ package com.yyuze.pkg;
  * Author: yyuze
  * Time: 2018-11-19
  */
-public class Frame {
+public class EthernetFrame {
 
+    /**
+     * 前同步码
+     */
     private Character[] preamble = new Character[]{0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101010, 0b1010101011};
 
+    /**
+     * 目的MAC地址
+     */
     private long targetMAC;
 
+    /**
+     * 源MAC地址
+     */
     private long sourceMAC;
 
-    private char type;
+    /**
+     * 类型
+     */
+    private int type;
 
+    /**
+     * 数据载荷
+     */
     private String payload;
 
+    /**
+     * 确保数据完整性的CRC
+     */
     private long CRC;
 
     public Character[] getPreamble() {
@@ -42,11 +60,11 @@ public class Frame {
         this.sourceMAC = sourceMAC;
     }
 
-    public char getType() {
+    public int getType() {
         return type;
     }
 
-    public void setType(char type) {
+    public void setType(int type) {
         this.type = type;
     }
 
