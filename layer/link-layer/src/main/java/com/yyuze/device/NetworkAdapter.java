@@ -101,18 +101,19 @@ public class NetworkAdapter {
 
     /**
      *将缓存区中的帧发送至链路
+     * 该API由运行平台轮询调用
      */
     public void sendToLink() {
-        if (this.link.isIdled()&&this.messageContorller.isAllowedTransfer()) {
-            for (EthernetFrame ethernetFrame : buffer) {
-                boolean occuredCollision = !this.link.receiveFromAdapter(ethernetFrame);
-                if (occuredCollision) {
+        if (this.messageContorller.isAllowedTransfer()) {
+            for (EthernetFrame frame : buffer) {
+                if (this.link.willOccurCollision(frame)) {
                     this.collisionCounter++;
                     this.messageContorller.pause();
                     break;
                 } else {
+                    this.link.receiveFromAdapter(frame);
                     this.messageContorller.reset();
-                    this.buffer.remove(ethernetFrame);
+                    this.buffer.remove(frame);
                     this.collisionCounter = 0;
                 }
             }
@@ -134,6 +135,7 @@ public class NetworkAdapter {
     private void joinLink(PhisicalLink link) {
         this.link = link;
         this.link.join(this);
+        //todo 构建arp表
     }
 
     private IPv4Packet resolveToIPv4Packet(EthernetFrame ethernetFrame){
