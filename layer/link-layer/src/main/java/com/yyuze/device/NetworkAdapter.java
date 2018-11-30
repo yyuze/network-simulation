@@ -3,10 +3,11 @@ package com.yyuze.device;
 import com.yyuze.pkg.IPv4Packet;
 import com.yyuze.pkg.EthernetFrame;
 import com.yyuze.table.AddressResolutionProtocolTable;
+import com.yyuze.tool.ActivityContorller;
 import com.yyuze.tool.CRC;
 
 import java.util.ArrayList;
-import java.util.Random;
+
 
 /**
  * Author: yyuze
@@ -30,45 +31,9 @@ public class NetworkAdapter {
 
     private int collisionCounter;
 
-    private MessageContorller messageContorller;
+    private ActivityContorller activityContorller;
 
     private AddressResolutionProtocolTable arpTable;
-
-    private class MessageContorller {
-
-        private long BIT_TIME_512;
-
-        private Random randomTool;
-
-        private long transferAllow;
-
-        public MessageContorller() {
-            this.BIT_TIME_512 = 512000000 / PhisicalLink.BANDWIDTH;
-            this.transferAllow = this.getMicrotimeStamp();
-            this.randomTool = new Random();
-        }
-
-        private long getMicrotimeStamp() {
-            return System.nanoTime() / 1000;
-        }
-
-        private long generateBinaryExponentialBackoff() {
-            return this.randomTool.nextInt((int) Math.pow(2, collisionCounter)) * this.BIT_TIME_512;
-        }
-
-        private void pause() {
-            this.transferAllow += this.generateBinaryExponentialBackoff();
-        }
-
-        private void reset() {
-            this.transferAllow = this.getMicrotimeStamp();
-        }
-
-        private boolean isAllowedTransfer() {
-            return this.transferAllow <= this.getMicrotimeStamp();
-        }
-
-    }
 
     public NetworkAdapter(long MAC,PhisicalLink link){
         this.crcTool = new CRC();
@@ -76,7 +41,7 @@ public class NetworkAdapter {
         this.joinLink(link);
         this.buffer = new ArrayList<>();
         this.collisionCounter = 0;
-        this.messageContorller = new MessageContorller();
+        this.activityContorller = new ActivityContorller();
         //todo arp
     }
 
@@ -101,19 +66,19 @@ public class NetworkAdapter {
 
     /**
      *将缓存区中的帧发送至链路
-     * 该API由运行平台轮询调用
+     * 该API由Runtime平台轮询调用
      */
     public void sendToLink() {
-        if (this.messageContorller.isAllowedTransfer()) {
+        if (this.activityContorller.isAllowedTransfer()) {
             for (EthernetFrame frame : buffer) {
                 if (this.link.willOccurCollision(frame)) {
                     this.collisionCounter++;
-                    this.messageContorller.pause();
+                    this.activityContorller.pause(this.collisionCounter);
                     break;
                 } else {
-                    this.link.receiveFromAdapter(frame);
-                    this.messageContorller.reset();
+                    this.link.receive(frame);
                     this.buffer.remove(frame);
+                    this.activityContorller.reset();
                     this.collisionCounter = 0;
                 }
             }
@@ -135,7 +100,6 @@ public class NetworkAdapter {
     private void joinLink(PhisicalLink link) {
         this.link = link;
         this.link.join(this);
-        //todo 构建arp表
     }
 
     private IPv4Packet resolveToIPv4Packet(EthernetFrame ethernetFrame){
@@ -160,15 +124,4 @@ public class NetworkAdapter {
     private long generateCRC(EthernetFrame ethernetFrame) {
         return this.crcTool.generateCRC(ethernetFrame.getPayload());
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj.getClass().equals(NetworkAdapter.class)) {
-            NetworkAdapter another = (NetworkAdapter) obj;
-            return this.MAC == another.MAC;
-        } else {
-            return false;
-        }
-    }
-
 }
