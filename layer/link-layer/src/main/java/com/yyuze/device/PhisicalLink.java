@@ -129,7 +129,7 @@ public class PhisicalLink {
     }
 
     /**
-     * 模拟现实中的设备随机接入
+     * 模拟现适配器接入
      * 每一个设备有一个一维坐标position
      *
      * @param device 接入的设备
@@ -149,26 +149,20 @@ public class PhisicalLink {
         }
     }
 
+    /**
+     * 模拟交换机接入
+     *
+     * @param device
+     */
     public void join(Switch device) {
         this.switches.add(device);
-    }
-
-    /**
-     * 提供给NetworkAdapter调用传输数据的api
-     *
-     * @param ethernetFrame 需要传输的帧
-     */
-    public void receive(EthernetFrame ethernetFrame) {
-        /**
-         * 由于抽象了物理层，因此此处不做其他处理，直接广播该帧
-         */
-        this.boardcastFrameInLink(ethernetFrame);
     }
 
     /**
      * 向链路上广播一个帧
      * 模拟帧在链路上向链路两端扩散广播的过程
      * 最后向链路上的交换机广播
+     *
      * @param ethernetFrame 被广播的帧
      */
     private void boardcastFrameInLink(EthernetFrame ethernetFrame) {
@@ -192,13 +186,13 @@ public class PhisicalLink {
             toTailIndex++;
             toHeadIndex--;
         }
-        for(Switch device:this.switches){
+        for (Switch device : this.switches) {
             device.receive(ethernetFrame);
         }
     }
 
     /**
-     * 提供给NetworkAdapter监听链路状态的api
+     * 监听链路状态
      *
      * @return 链路的状态
      */
@@ -206,8 +200,23 @@ public class PhisicalLink {
         return this.transferModel.forecastCollision(new BitTransferModel(frame));
     }
 
+    /**
+     * 查询链路中是否含有某个MAC设备
+     *
+     * @param MAC
+     * @return
+     */
     public boolean containsMAC(long MAC) {
         return this.MAC2PositionMap.containsKey(MAC);
     }
 
+    /**
+     * 提供给链路上其他设备传输数据的api
+     * 由于抽象了物理层，因此此处不做其他处理，直接广播数据帧
+     *
+     * @param ethernetFrame 需要传输的帧
+     */
+    public void receive(EthernetFrame ethernetFrame) {
+        this.boardcastFrameInLink(ethernetFrame);
+    }
 }

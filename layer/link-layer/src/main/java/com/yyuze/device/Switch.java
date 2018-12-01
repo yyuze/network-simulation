@@ -15,6 +15,7 @@ import java.util.Random;
 
 /**
  * 二层交换机
+ * 多路访问协议：CSMA/CD
  */
 public class Switch {
 
@@ -53,7 +54,7 @@ public class Switch {
      */
     private int[] collisionCount;
 
-    public Switch(){
+    public Switch() {
         this.links = new HashMap<>();
         this.switchTable = new SwitchTable();
         this.buffer = new ArrayList<>();
@@ -62,31 +63,9 @@ public class Switch {
         this.collisionCount = new int[128];
     }
 
-    public void joinLink(PhisicalLink link) throws Exception {
-        if (this.links.size() > Switch.PORT_AMOUNT) {
-            throw new Exception() {
-                @Override
-                public String getMessage() {
-                    return "交换机端口已满,无法接入";
-                }
-            };
-        }
-        int accessPort = this.random.nextInt(Switch.PORT_AMOUNT);
-        if (!this.links.containsKey(accessPort)) {
-            this.links.put(accessPort, link);
-            this.activityContorllers.put(accessPort,new ActivityContorller());
-            link.join(this);
-        } else {
-            this.joinLink(link);
-        }
-    }
-
-    public void receive(EthernetFrame frame) {
-        this.buffer.add(frame);
-    }
-
     /**
      * 向指定端口转发帧
+     *
      * @param targetPort
      * @param frame
      */
@@ -105,6 +84,48 @@ public class Switch {
             }
         }
     }
+
+    /**
+     * 提供给链路向交换机发送数据时调用的api
+     *
+     * @param frame
+     */
+    public void receive(EthernetFrame frame) {
+        long sourceMAC = frame.getSourceMAC();
+        this.links.forEach((port,link)->{
+            if(link.containsMAC(sourceMAC)){
+                this.switchTable.add(sourceMAC,port);
+            }
+        });
+        this.buffer.add(frame);
+
+    }
+
+    /**
+     * 提供给runtime平台调用构造基础网络的api
+     *
+     * @param link
+     * @throws Exception 当接入链路达到上限时抛出
+     */
+    public void joinLink(PhisicalLink link) throws Exception {
+        if (this.links.size() > Switch.PORT_AMOUNT) {
+            throw new Exception() {
+                @Override
+                public String getMessage() {
+                    return "交换机端口已满,无法接入";
+                }
+            };
+        }
+        int accessPort = this.random.nextInt(Switch.PORT_AMOUNT);
+        if (!this.links.containsKey(accessPort)) {
+            this.links.put(accessPort, link);
+            this.activityContorllers.put(accessPort, new ActivityContorller());
+            link.join(this);
+        } else {
+            this.joinLink(link);
+        }
+    }
+
 
     /**
      * 由Runtime轮询调用
@@ -126,7 +147,7 @@ public class Switch {
                         }
                     });
                 }
-            }else{
+            } else {
                 this.buffer.remove(frame);
             }
         }
