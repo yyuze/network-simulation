@@ -1,10 +1,10 @@
-package com.yyuze.pkg;
+package com.yyuze.packet;
 
 /**
  * Author: yyuze
  * Time: 2018-11-19
  */
-public class EthernetFrame {
+public class EthernetFrame extends BasePacket{
 
     /**
      * 前同步码

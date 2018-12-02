@@ -1,6 +1,6 @@
 package com.yyuze.device;
 
-import com.yyuze.pkg.EthernetFrame;
+import com.yyuze.packet.EthernetFrame;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;

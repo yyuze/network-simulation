@@ -1,6 +1,8 @@
 package com.yyuze.device;
 
-import com.yyuze.pkg.EthernetFrame;
+import com.yyuze.anno.Platform;
+import com.yyuze.enums.LayerType;
+import com.yyuze.packet.EthernetFrame;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +16,11 @@ import java.util.Random;
 /**
  * 基础以太网链路
  */
+
+@Platform(LayerType.LINK)
 public class PhisicalLink {
+
+    public long serial;
 
     //bandwidth = 10Mbps = 10*10^6 bit/s = 10^7/8 byte/s = 1250000 byte/s
     public static long BANDWIDTH = 1250000L;
@@ -56,7 +62,8 @@ public class PhisicalLink {
      */
     private BitTransferModel transferModel;
 
-    public PhisicalLink() {
+    public PhisicalLink(long serial) {
+        this.serial = serial;
         this.MAC2PositionMap = new HashMap<>();
         this.position2DevicesMap = new HashMap<>();
         this.switches = new ArrayList<>();
@@ -158,6 +165,19 @@ public class PhisicalLink {
         this.switches.add(device);
     }
 
+    private void sendFrameTo(EthernetFrame frame, long position) {
+        if (this.MAC2PositionMap.containsValue(position)) {
+            ArrayList<NetworkAdapter> deviceList = this.position2DevicesMap.get(position);
+            for (NetworkAdapter device : deviceList) {
+                try {
+                    device.receive(frame);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     /**
      * 向链路上广播一个帧
      * 模拟帧在链路上向链路两端扩散广播的过程
@@ -171,18 +191,8 @@ public class PhisicalLink {
         Long toHeadIndex = position - 1;
         Long toTailIndex = position + 1;
         while (toHeadIndex >= this.start || toTailIndex <= this.end) {
-            if (this.MAC2PositionMap.containsValue(toHeadIndex)) {
-                ArrayList<NetworkAdapter> deviceList = this.position2DevicesMap.get(toHeadIndex);
-                for (NetworkAdapter device : deviceList) {
-                    device.receiveFromLink(ethernetFrame);
-                }
-            }
-            if (this.MAC2PositionMap.containsValue(toTailIndex)) {
-                ArrayList<NetworkAdapter> deviceList = this.position2DevicesMap.get(toHeadIndex);
-                for (NetworkAdapter device : deviceList) {
-                    device.receiveFromLink(ethernetFrame);
-                }
-            }
+            this.sendFrameTo(ethernetFrame, toHeadIndex);
+            this.sendFrameTo(ethernetFrame, toTailIndex);
             toTailIndex++;
             toHeadIndex--;
         }

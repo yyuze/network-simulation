@@ -1,4 +1,4 @@
-package com.yyuze.pkg;
+package com.yyuze.packet;
 
 /**
  * Author: yyuze

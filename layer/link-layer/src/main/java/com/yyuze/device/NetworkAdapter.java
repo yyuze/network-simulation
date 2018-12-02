@@ -1,8 +1,13 @@
 package com.yyuze.device;
 
-import com.yyuze.pkg.IPv4Packet;
-import com.yyuze.pkg.EthernetFrame;
-import com.yyuze.table.AddressResolutionProtocolTable;
+import com.yyuze.anno.Action;
+import com.yyuze.anno.Platform;
+import com.yyuze.enums.Command;
+import com.yyuze.enums.LayerType;
+import com.yyuze.packet.BasePacket;
+import com.yyuze.packet.IPv4Packet;
+import com.yyuze.packet.EthernetFrame;
+import com.yyuze.tool.ARP;
 import com.yyuze.tool.ActivityContorller;
 import com.yyuze.tool.CRC;
 
@@ -19,21 +24,21 @@ import java.util.ArrayList;
  * 数据校验协议：CRC
  * 多路访问协议：CSMA/CD
  */
-public class NetworkAdapter {
+
+@Platform(LayerType.LINK)
+public class NetworkAdapter extends BaseDevice{
 
     private CRC crcTool;
 
     public long MAC;
 
-    private PhisicalLink link;
-
     private ArrayList<EthernetFrame> buffer;
+
+    private PhisicalLink link;
 
     private int collisionCounter;
 
     private ActivityContorller activityContorller;
-
-    private AddressResolutionProtocolTable arpTable;
 
     public NetworkAdapter(long MAC) {
         this.crcTool = new CRC();
@@ -41,18 +46,12 @@ public class NetworkAdapter {
         this.buffer = new ArrayList<>();
         this.collisionCounter = 0;
         this.activityContorller = new ActivityContorller();
-        //todo arp
-    }
-
-    private IPv4Packet resolveToIPv4Packet(EthernetFrame ethernetFrame) {
-        //todo 将以太帧转化为IPv4的包
-        return null;
     }
 
     private EthernetFrame resolveToEhernetFrame(IPv4Packet packet) {
         EthernetFrame ethernetFrame = new EthernetFrame();
         ethernetFrame.setSourceMAC(this.MAC);
-        ethernetFrame.setTargetMAC(this.arpTable.getMACByIP(packet.getTargetIP()));
+        ethernetFrame.setTargetMAC(ARP.getMACByIP(packet.getTargetIP()));
         ethernetFrame.setPayload(packet.toString());
         ethernetFrame.setType(0x0800);
         ethernetFrame.setCRC(this.generateCRC(ethernetFrame));
@@ -70,35 +69,24 @@ public class NetworkAdapter {
     /**
      * 提供给链路向适配器发送数据时调用的api
      *
-     * @param ethernetFrame 从链路获取的帧
+     * @param packet 从链路获取的帧
      */
-    public void receiveFromLink(EthernetFrame ethernetFrame) {
-        if (ethernetFrame.getTargetMAC() == this.MAC) {
-            if (this.check(ethernetFrame)) {
-                this.buffer.add(ethernetFrame);
+    @Override
+    public <T extends BasePacket> void receive(T packet) throws Exception {
+        if(!packet.getClass().equals(EthernetFrame.class)){
+            throw new Exception(){
+                @Override
+                public String getMessage() {
+                    return "wrong packet type";
+                }
+            };
+        }
+        EthernetFrame frame = (EthernetFrame)packet;
+        if (frame.getTargetMAC() == this.MAC || frame.getTargetMAC() == 0xffffffff) {
+            if (this.check(frame)) {
+                this.buffer.add(frame);
             }
         }
-    }
-
-    /**
-     * 提供给网络层接收数据的api
-     *
-     * @param ethernetFrame 发送至网络层的数据
-     */
-    public void sendToNetworkLayer(EthernetFrame ethernetFrame) {
-        this.resolveToIPv4Packet(ethernetFrame);
-        //todo 调用上层数据接口
-
-    }
-
-    /**
-     * 提供给网络层发送数据的api
-     *
-     * @param packet 网络层传来的数据
-     */
-    public void receiveFromNetworkLayer(IPv4Packet packet) {
-        EthernetFrame ethernetFrame = this.resolveToEhernetFrame(packet);
-        this.buffer.add(ethernetFrame);
     }
 
     /**
@@ -131,4 +119,5 @@ public class NetworkAdapter {
         this.link = link;
         this.link.join(this);
     }
+
 }

@@ -6,6 +6,7 @@ package com.yyuze.tool;
  */
 
 /**
+ * Cyclic Redundance Chck
  * 一个能生成和校验32位CRC值的工具
  * 在network adapter中验证帧数据的完整性时被使用
  */

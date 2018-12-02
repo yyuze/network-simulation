@@ -1,6 +1,8 @@
 package com.yyuze.device;
 
-import com.yyuze.pkg.EthernetFrame;
+import com.yyuze.anno.Platform;
+import com.yyuze.enums.LayerType;
+import com.yyuze.packet.EthernetFrame;
 import com.yyuze.table.SwitchTable;
 import com.yyuze.tool.ActivityContorller;
 
@@ -17,7 +19,11 @@ import java.util.Random;
  * 二层交换机
  * 多路访问协议：CSMA/CD
  */
+
+@Platform(LayerType.LINK)
 public class Switch {
+
+    public long serial;
 
     /**
      * 可接入的端口数
@@ -54,7 +60,8 @@ public class Switch {
      */
     private int[] collisionCount;
 
-    public Switch() {
+    public Switch(long serial) {
+        this.serial = serial;
         this.links = new HashMap<>();
         this.switchTable = new SwitchTable();
         this.buffer = new ArrayList<>();
