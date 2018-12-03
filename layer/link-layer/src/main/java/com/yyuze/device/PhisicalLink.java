@@ -127,9 +127,9 @@ public class PhisicalLink {
             float endBoardToHead = this.getTimeByPosition(start);
             float endBoardToTail = this.getTimeByPosition(end);
 
-            boolean startBoardCheck = anotherModel.getTimeByPosition(anotherModel.startPosition) > startBoard;
-            boolean endBoardToHeadCheck = anotherModel.getTimeByPosition(start) > endBoardToHead;
-            boolean endBoardToTailCheck = anotherModel.getTimeByPosition(end) > endBoardToTail;
+            boolean startBoardCheck = anotherModel.getTimeByPosition(this.startPosition) < startBoard;
+            boolean endBoardToHeadCheck = anotherModel.getTimeByPosition(start) < endBoardToHead;
+            boolean endBoardToTailCheck = anotherModel.getTimeByPosition(end) < endBoardToTail;
             return startBoardCheck && endBoardToHeadCheck && endBoardToTailCheck;
         }
 
