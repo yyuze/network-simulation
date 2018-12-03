@@ -14,10 +14,22 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Link {
 
+    /**
+     * 链路序列号
+     * @return
+     */
     long serial();
 
+    /**
+     * 链路上的设备MAC地址
+     * @return
+     */
     long[] MACs();
 
+    /**
+     * 链路上的交换机序列号
+     * @return
+     */
     long[] switchs();
 
 }

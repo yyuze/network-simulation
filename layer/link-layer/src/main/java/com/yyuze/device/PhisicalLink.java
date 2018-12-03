@@ -170,7 +170,7 @@ public class PhisicalLink {
             ArrayList<NetworkAdapter> deviceList = this.position2DevicesMap.get(position);
             for (NetworkAdapter device : deviceList) {
                 try {
-                    device.receive(frame);
+                    device.receiveFromLower(frame);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

@@ -5,8 +5,8 @@ import com.yyuze.enums.LayerType;
 import com.yyuze.packet.EthernetFrame;
 import com.yyuze.table.SwitchTable;
 import com.yyuze.tool.ActivityContorller;
+import com.yyuze.tool.Buffer;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -43,7 +43,9 @@ public class Switch {
     /**
      * 交换机缓存
      */
-    private ArrayList<EthernetFrame> buffer;
+//    private ArrayList<EthernetFrame> buffer;
+
+    private Buffer<EthernetFrame> buffer;
 
     /**
      * 随机数生成器
@@ -64,7 +66,7 @@ public class Switch {
         this.serial = serial;
         this.links = new HashMap<>();
         this.switchTable = new SwitchTable();
-        this.buffer = new ArrayList<>();
+        this.buffer = new Buffer<>();
         this.random = new Random();
         this.activityContorllers = new HashMap<>();
         this.collisionCount = new int[128];
@@ -76,7 +78,7 @@ public class Switch {
      * @param targetPort
      * @param frame
      */
-    private void transferToPort(int targetPort, EthernetFrame frame) {
+    private boolean transferToPort(int targetPort, EthernetFrame frame) {
         ActivityContorller transferController = this.activityContorllers.get(targetPort);
         if (transferController.isAllowedTransfer()) {
             PhisicalLink link = this.links.get(targetPort);
@@ -85,11 +87,13 @@ public class Switch {
                 transferController.pause(this.collisionCount[targetPort]);
             } else {
                 link.receive(frame);
-                this.buffer.remove(frame);
                 this.collisionCount[targetPort] = 0;
                 transferController.reset();
+                return true;
             }
         }
+        return false;
+
     }
 
     /**
@@ -142,21 +146,25 @@ public class Switch {
      */
     public void transfer() {
         for (EthernetFrame frame : this.buffer) {
+            this.buffer.addDeleteSignFor(frame);
             int targetPort = this.switchTable.getPortByMAC(frame.getTargetMAC());
             int sourcePort = this.switchTable.getPortByMAC(frame.getSourceMAC());
             if (targetPort != sourcePort) {
                 if (targetPort != -1) {
-                    this.transferToPort(targetPort, frame);
+                    if(!this.transferToPort(targetPort, frame)){
+                        this.buffer.removeDeleteSignFor(frame);
+                    }
                 } else {
                     this.links.forEach((port, link) -> {
                         if (!link.containsMAC(frame.getSourceMAC())) {
-                            this.transferToPort(port, frame);
+                            if(!this.transferToPort(port, frame)){
+                                this.buffer.removeDeleteSignFor(frame);
+                            }
                         }
                     });
                 }
-            } else {
-                this.buffer.remove(frame);
             }
         }
+        this.buffer.clean();
     }
 }

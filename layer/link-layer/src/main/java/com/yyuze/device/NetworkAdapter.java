@@ -1,18 +1,13 @@
 package com.yyuze.device;
 
-import com.yyuze.anno.Action;
+import com.yyuze.LinkLayer;
 import com.yyuze.anno.Platform;
-import com.yyuze.enums.Command;
 import com.yyuze.enums.LayerType;
 import com.yyuze.packet.BasePacket;
-import com.yyuze.packet.IPv4Packet;
 import com.yyuze.packet.EthernetFrame;
-import com.yyuze.tool.ARP;
 import com.yyuze.tool.ActivityContorller;
+import com.yyuze.tool.Buffer;
 import com.yyuze.tool.CRC;
-
-import java.util.ArrayList;
-
 
 /**
  * Author: yyuze
@@ -26,13 +21,15 @@ import java.util.ArrayList;
  */
 
 @Platform(LayerType.LINK)
-public class NetworkAdapter extends BaseDevice{
+public class NetworkAdapter extends BaseDevice<LinkLayer>{
 
     private CRC crcTool;
 
     public long MAC;
 
-    private ArrayList<EthernetFrame> buffer;
+    private Buffer<EthernetFrame> toUpperBuffer;
+
+    private Buffer<EthernetFrame> toLowerBuffer;
 
     private PhisicalLink link;
 
@@ -43,19 +40,10 @@ public class NetworkAdapter extends BaseDevice{
     public NetworkAdapter(long MAC) {
         this.crcTool = new CRC();
         this.MAC = MAC;
-        this.buffer = new ArrayList<>();
+        this.toUpperBuffer = new Buffer<>();
+        this.toLowerBuffer = new Buffer<>();
         this.collisionCounter = 0;
         this.activityContorller = new ActivityContorller();
-    }
-
-    private EthernetFrame resolveToEhernetFrame(IPv4Packet packet) {
-        EthernetFrame ethernetFrame = new EthernetFrame();
-        ethernetFrame.setSourceMAC(this.MAC);
-        ethernetFrame.setTargetMAC(ARP.getMACByIP(packet.getTargetIP()));
-        ethernetFrame.setPayload(packet.toString());
-        ethernetFrame.setType(0x0800);
-        ethernetFrame.setCRC(this.generateCRC(ethernetFrame));
-        return ethernetFrame;
     }
 
     private boolean check(EthernetFrame ethernetFrame) {
@@ -64,50 +52,6 @@ public class NetworkAdapter extends BaseDevice{
 
     private long generateCRC(EthernetFrame ethernetFrame) {
         return this.crcTool.generateCRC(ethernetFrame.getPayload());
-    }
-
-    /**
-     * 提供给链路向适配器发送数据时调用的api
-     *
-     * @param packet 从链路获取的帧
-     */
-    @Override
-    public <T extends BasePacket> void receive(T packet) throws Exception {
-        if(!packet.getClass().equals(EthernetFrame.class)){
-            throw new Exception(){
-                @Override
-                public String getMessage() {
-                    return "wrong packet type";
-                }
-            };
-        }
-        EthernetFrame frame = (EthernetFrame)packet;
-        if (frame.getTargetMAC() == this.MAC || frame.getTargetMAC() == 0xffffffff) {
-            if (this.check(frame)) {
-                this.buffer.add(frame);
-            }
-        }
-    }
-
-    /**
-     * 该API由Runtime平台轮询调用
-     * 将缓存区中的帧发送至链路
-     */
-    public void sendToLink() {
-        if (this.activityContorller.isAllowedTransfer()) {
-            for (EthernetFrame frame : buffer) {
-                if (this.link.willOccurCollision(frame)) {
-                    this.collisionCounter++;
-                    this.activityContorller.pause(this.collisionCounter);
-                    break;
-                } else {
-                    this.link.receive(frame);
-                    this.buffer.remove(frame);
-                    this.activityContorller.reset();
-                    this.collisionCounter = 0;
-                }
-            }
-        }
     }
 
     /**
@@ -120,4 +64,88 @@ public class NetworkAdapter extends BaseDevice{
         this.link.join(this);
     }
 
+    /**
+     * 该API由Runtime平台轮询调用
+     * 将需要往上层传递的帧发送到平台中
+     */
+    @Override
+    protected void sendToUpper() {
+        for (EthernetFrame frame:this.toUpperBuffer){
+            this.toUpperBuffer.addDeleteSignFor(frame);
+            this.sendToRuntime(frame);
+        }
+        this.toUpperBuffer.clean();
+    }
+
+    /**
+     * 该API由Runtime平台轮询调用
+     * 将缓存区中的帧发送至链路
+     */
+    @Override
+    protected void sendToLower() {
+        if (this.activityContorller.isAllowedTransfer()) {
+            for (EthernetFrame frame : this.toLowerBuffer) {
+                this.toLowerBuffer.addDeleteSignFor(frame);
+                if (this.link.willOccurCollision(frame)) {
+                    this.collisionCounter++;
+                    this.activityContorller.pause(this.collisionCounter);
+                    this.toLowerBuffer.removeDeleteSignFor(frame);
+                    break;
+                } else {
+                    /**
+                     * frame的 payload 和 targetMAC 通过平台设置
+                     */
+                    frame.setSourceMAC(this.MAC);
+                    frame.setType(0x0800);
+                    frame.setCRC(this.generateCRC(frame));
+                    this.link.receive(frame);
+                    this.activityContorller.reset();
+                    this.collisionCounter = 0;
+                }
+            }
+         this.toLowerBuffer.clean();
+        }
+    }
+
+    /**
+     * 该API由Runtime平台通信时调用
+     * @param packet
+     * @param <T>
+     */
+    @Override
+    protected <T extends BasePacket> void receiveFromUpper(T packet) throws Exception {
+        if(!packet.getClass().equals(EthernetFrame.class)){
+            throw new Exception(){
+                @Override
+                public String getMessage() {
+                    return "wrong packet type";
+                }
+            };
+        }
+        EthernetFrame frame = (EthernetFrame)packet;
+        this.toLowerBuffer.add(frame);
+    }
+
+    /**
+     * 提供给链路向适配器发送数据时调用的api
+     *
+     * @param packet 从链路获取的帧
+     */
+    @Override
+    protected <T extends BasePacket> void receiveFromLower(T packet) throws Exception {
+        if(!packet.getClass().equals(EthernetFrame.class)){
+            throw new Exception(){
+                @Override
+                public String getMessage() {
+                    return "wrong packet type";
+                }
+            };
+        }
+        EthernetFrame frame = (EthernetFrame)packet;
+        if (frame.getTargetMAC() == this.MAC || frame.getTargetMAC() == 0xffffffff) {
+            if (this.check(frame)) {
+                this.toUpperBuffer.add(frame);
+            }
+        }
+    }
 }

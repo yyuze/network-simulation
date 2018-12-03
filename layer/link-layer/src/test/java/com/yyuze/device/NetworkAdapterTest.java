@@ -21,7 +21,7 @@ public class NetworkAdapterTest {
     @Test
     public static void initNetworkAdapterTest() {
         System.out.println("NetworkAdapter test start");
-        networkAdapter = new NetworkAdapter(0xffffffffffffL,null);
+        networkAdapter = new NetworkAdapter(0xffffffffffffL);
     }
 
     @DisplayName("NetworkAdapter.check()")
