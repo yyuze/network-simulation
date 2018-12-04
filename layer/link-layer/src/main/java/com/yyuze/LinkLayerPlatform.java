@@ -1,19 +1,25 @@
 package com.yyuze;
 
-import com.yyuze.anno.Action;
+import com.yyuze.anno.Command;
 import com.yyuze.anno.Link;
 import com.yyuze.anno.Platform;
+import com.yyuze.device.NetworkAdapter;
 import com.yyuze.device.PhisicalLink;
-import com.yyuze.enums.Command;
+import com.yyuze.device.Router;
+import com.yyuze.device.Switch;
+import com.yyuze.enable.DownwardTransmitable;
+import com.yyuze.enable.UpwardTransmitable;
+import com.yyuze.enums.CommandEnum;
 import com.yyuze.enums.LayerType;
-import com.yyuze.packet.BasePacket;
+import com.yyuze.exception.PacketTypeException;
 import com.yyuze.packet.EthernetFrame;
-import com.yyuze.tool.ARP;
+import com.yyuze.packet.IPv4Packet;
+import com.yyuze.table.ARPTable;
 import com.yyuze.tool.CRC;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 
 /**
  * Author: yyuze
@@ -21,7 +27,7 @@ import java.lang.reflect.InvocationTargetException;
  */
 
 @Platform(LayerType.LINK)
-public class LinkLayer extends BasePlatform {
+public class LinkLayerPlatform implements DownwardTransmitable<IPv4Packet>, UpwardTransmitable<EthernetFrame> {
 
     @Link(serial = 0x00000001,MACs = {0x10000000,0x10000001,0x10000002},switchs = {0x20000001,0x20000002})
     PhisicalLink link1;
@@ -32,21 +38,21 @@ public class LinkLayer extends BasePlatform {
     @Link(serial = 0x00000003,MACs = {0x10000006,0x10000007,0x10000008},switchs = {0x20000003,0x20000001})
     PhisicalLink link3;
 
-    @Override
-    public <T extends BasePacket> void receive(T packet) {
-        //todo 对网络层抽象链路层
-    }
+    /**
+     * 模拟分布式的ARP工具，Key是设备MAC地址
+     */
+    HashMap<Long, ARPTable> arptools;
 
-    @Override
-    public <T extends BasePacket> void send(T packet) {
-        //todo 对网络层抽象链路层
-    }
+    HashMap<Long, NetworkAdapter> adapters;
+
+    HashMap<Long, Router> routers;
+
 
     /**
      * 提供给命令行调用
      * @param content
      */
-    @Action(Command.link_rcv)
+    @Command(CommandEnum.link_rcv)
     public void receiveString(String content){
         String[] lines = content.split("\n");
         long source = Long.getLong(lines[0]);
@@ -74,4 +80,29 @@ public class LinkLayer extends BasePlatform {
         }
     }
 
+    @Override
+    public void tansmitToLower(long MAC,IPv4Packet packet) {
+        EthernetFrame frame = new EthernetFrame();
+        frame.setPayload(packet.toString());
+        frame.setTargetMAC(this.arptools.get(MAC).getMACByIP(packet.getTargetIP()));
+        try {
+            this.adapters.get(MAC).receiveFromUpper(frame);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void tansmitToUpper(long MAC,EthernetFrame packet) {
+        try {
+            this.routers.get(MAC).receiveFromLower(this.convertFrameToIpPacket(packet));
+        } catch (PacketTypeException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private IPv4Packet convertFrameToIpPacket(EthernetFrame frame){
+        //todo
+        return null;
+    }
 }

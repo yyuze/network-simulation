@@ -4,7 +4,7 @@ package com.yyuze.enums;
  * Author: yyuze
  * Time: 2018-12-02
  */
-public enum Command {
+public enum CommandEnum {
 
     /**
      * 该命令为在链路层中发送一个帧

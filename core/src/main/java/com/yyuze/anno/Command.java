@@ -1,6 +1,6 @@
 package com.yyuze.anno;
 
-import com.yyuze.enums.Command;
+import com.yyuze.enums.CommandEnum;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -14,8 +14,8 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Action {
+public @interface Command {
 
-    Command value();
+    CommandEnum value();
 
 }

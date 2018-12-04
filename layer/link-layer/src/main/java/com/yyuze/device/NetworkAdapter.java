@@ -1,8 +1,10 @@
 package com.yyuze.device;
 
-import com.yyuze.LinkLayer;
+import com.yyuze.LinkLayerPlatform;
 import com.yyuze.anno.Platform;
+import com.yyuze.anno.Schedule;
 import com.yyuze.enums.LayerType;
+import com.yyuze.exception.PacketTypeException;
 import com.yyuze.packet.BasePacket;
 import com.yyuze.packet.EthernetFrame;
 import com.yyuze.tool.ActivityContorller;
@@ -21,7 +23,7 @@ import com.yyuze.tool.CRC;
  */
 
 @Platform(LayerType.LINK)
-public class NetworkAdapter extends BaseDevice<LinkLayer>{
+public class NetworkAdapter extends BaseDevice<EthernetFrame>{
 
     private CRC crcTool;
 
@@ -68,11 +70,12 @@ public class NetworkAdapter extends BaseDevice<LinkLayer>{
      * 该API由Runtime平台轮询调用
      * 将需要往上层传递的帧发送到平台中
      */
+    @Schedule(period = 1000)
     @Override
     protected void sendToUpper() {
         for (EthernetFrame frame:this.toUpperBuffer){
             this.toUpperBuffer.addDeleteSignFor(frame);
-            this.sendToRuntime(frame);
+            this.platform.tansmitToUpper(this.MAC,frame);
         }
         this.toUpperBuffer.clean();
     }
@@ -81,6 +84,7 @@ public class NetworkAdapter extends BaseDevice<LinkLayer>{
      * 该API由Runtime平台轮询调用
      * 将缓存区中的帧发送至链路
      */
+    @Schedule(period = 1000)
     @Override
     protected void sendToLower() {
         if (this.activityContorller.isAllowedTransfer()) {
@@ -113,14 +117,9 @@ public class NetworkAdapter extends BaseDevice<LinkLayer>{
      * @param <T>
      */
     @Override
-    protected <T extends BasePacket> void receiveFromUpper(T packet) throws Exception {
+    public <T extends BasePacket> void receiveFromUpper(T packet) throws PacketTypeException {
         if(!packet.getClass().equals(EthernetFrame.class)){
-            throw new Exception(){
-                @Override
-                public String getMessage() {
-                    return "wrong packet type";
-                }
-            };
+            throw new PacketTypeException();
         }
         EthernetFrame frame = (EthernetFrame)packet;
         this.toLowerBuffer.add(frame);
@@ -132,14 +131,9 @@ public class NetworkAdapter extends BaseDevice<LinkLayer>{
      * @param packet 从链路获取的帧
      */
     @Override
-    protected <T extends BasePacket> void receiveFromLower(T packet) throws Exception {
+    protected <T extends BasePacket> void receiveFromLower(T packet) throws PacketTypeException {
         if(!packet.getClass().equals(EthernetFrame.class)){
-            throw new Exception(){
-                @Override
-                public String getMessage() {
-                    return "wrong packet type";
-                }
-            };
+            throw new PacketTypeException();
         }
         EthernetFrame frame = (EthernetFrame)packet;
         if (frame.getTargetMAC() == this.MAC || frame.getTargetMAC() == 0xffffffff) {

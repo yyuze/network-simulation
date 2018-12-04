@@ -13,6 +13,7 @@ import java.util.ArrayList;
  */
 public class SwitchTable {
 
+    //TTL = 600s = 10min
     public static long TTL = 10 * 60;
 
     private ArrayList<SwitchItem> table;
@@ -82,7 +83,7 @@ public class SwitchTable {
      * @param MAC
      * @param port 端口
      */
-    public void add(long MAC, int port) {
+    public void update(long MAC, int port) {
         long agingTime = System.currentTimeMillis() / 1000 + SwitchTable.TTL;//10min
         SwitchItem item = new SwitchItem(MAC, port, agingTime);
         boolean isNew = true;

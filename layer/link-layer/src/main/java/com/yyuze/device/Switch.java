@@ -105,7 +105,7 @@ public class Switch {
         long sourceMAC = frame.getSourceMAC();
         this.links.forEach((port,link)->{
             if(link.containsMAC(sourceMAC)){
-                this.switchTable.add(sourceMAC,port);
+                this.switchTable.update(sourceMAC,port);
             }
         });
         this.buffer.add(frame);
