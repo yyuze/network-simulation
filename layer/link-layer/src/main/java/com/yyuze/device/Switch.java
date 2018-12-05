@@ -1,7 +1,8 @@
 package com.yyuze.device;
 
-import com.yyuze.anno.Platform;
+import com.yyuze.platform.anno.Layer;
 import com.yyuze.enums.LayerType;
+import com.yyuze.exception.PortFullOccupiedException;
 import com.yyuze.packet.EthernetFrame;
 import com.yyuze.table.SwitchTable;
 import com.yyuze.tool.ActivityContorller;
@@ -20,7 +21,7 @@ import java.util.Random;
  * 多路访问协议：CSMA/CD
  */
 
-@Platform(LayerType.LINK)
+@Layer(LayerType.LINK)
 public class Switch {
 
     public long serial;
@@ -40,10 +41,6 @@ public class Switch {
      */
     private SwitchTable switchTable;
 
-    /**
-     * 交换机缓存
-     */
-//    private ArrayList<EthernetFrame> buffer;
 
     private Buffer<EthernetFrame> buffer;
 
@@ -118,14 +115,9 @@ public class Switch {
      * @param link
      * @throws Exception 当接入链路达到上限时抛出
      */
-    public void joinLink(PhisicalLink link) throws Exception {
+    public void joinLink(PhisicalLink link) throws PortFullOccupiedException {
         if (this.links.size() > Switch.PORT_AMOUNT) {
-            throw new Exception() {
-                @Override
-                public String getMessage() {
-                    return "交换机端口已满,无法接入";
-                }
-            };
+            throw new PortFullOccupiedException();
         }
         int accessPort = this.random.nextInt(Switch.PORT_AMOUNT);
         if (!this.links.containsKey(accessPort)) {

@@ -1,8 +1,7 @@
 package com.yyuze.device;
 
-import com.yyuze.LinkLayerPlatform;
-import com.yyuze.anno.Platform;
-import com.yyuze.anno.Schedule;
+import com.yyuze.platform.anno.Layer;
+import com.yyuze.invoker.schedule.anno.Schedule;
 import com.yyuze.enums.LayerType;
 import com.yyuze.exception.PacketTypeException;
 import com.yyuze.packet.BasePacket;
@@ -22,7 +21,7 @@ import com.yyuze.tool.CRC;
  * 多路访问协议：CSMA/CD
  */
 
-@Platform(LayerType.LINK)
+@Layer(LayerType.LINK)
 public class NetworkAdapter extends BaseDevice<EthernetFrame>{
 
     private CRC crcTool;

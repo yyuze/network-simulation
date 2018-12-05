@@ -1,6 +1,6 @@
 package com.yyuze.device;
 
-import com.yyuze.anno.Platform;
+import com.yyuze.platform.anno.Layer;
 import com.yyuze.enums.LayerType;
 import com.yyuze.packet.EthernetFrame;
 
@@ -17,7 +17,7 @@ import java.util.Random;
  * 基础以太网链路
  */
 
-@Platform(LayerType.LINK)
+@Layer(LayerType.LINK)
 public class PhisicalLink {
 
     public long serial;

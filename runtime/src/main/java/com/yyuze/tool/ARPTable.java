@@ -1,9 +1,11 @@
-package com.yyuze.table;
+package com.yyuze.tool;
 
 /**
  * Author: yyuze
  * Time: 2018-11-21
  */
+
+import com.yyuze.table.SwitchTable;
 
 import java.util.ArrayList;
 

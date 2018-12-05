@@ -1,4 +1,6 @@
-package com.yyuze.anno;
+package com.yyuze.platform.anno;
+
+import com.yyuze.enums.LayerType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,13 +9,13 @@ import java.lang.annotation.Target;
 
 /**
  * Author: yyuze
- * Time: 2018-12-04
+ * Time: 2018-12-01
  */
 
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Schedule {
+public @interface Layer {
 
-    long period();
+    LayerType value();
 
 }

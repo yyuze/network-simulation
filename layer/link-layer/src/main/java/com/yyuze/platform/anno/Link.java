@@ -1,4 +1,4 @@
-package com.yyuze.anno;
+package com.yyuze.platform.anno;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
