@@ -1,7 +1,7 @@
-package com.yyuze.device;
+package com.yyuze.component;
 
-import com.yyuze.platform.anno.Layer;
-import com.yyuze.invoker.schedule.anno.Schedule;
+import com.yyuze.anno.system.Schedule;
+import com.yyuze.anno.platform.Layer;
 import com.yyuze.enums.LayerType;
 import com.yyuze.exception.PacketTypeException;
 import com.yyuze.packet.BasePacket;

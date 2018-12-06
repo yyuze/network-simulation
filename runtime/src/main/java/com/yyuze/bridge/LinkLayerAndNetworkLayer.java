@@ -1,7 +1,7 @@
 package com.yyuze.bridge;
 
-import com.yyuze.device.NetworkAdapter;
-import com.yyuze.device.Router;
+import com.yyuze.component.NetworkAdapter;
+import com.yyuze.component.Router;
 import com.yyuze.enable.DownwardTransmitable;
 import com.yyuze.enable.UpwardTransmitable;
 import com.yyuze.exception.PacketTypeException;

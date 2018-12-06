@@ -1,4 +1,4 @@
-package com.yyuze.device;
+package com.yyuze.component;
 
 import com.yyuze.enable.UpwardTransmitable;
 import com.yyuze.exception.PacketTypeException;

@@ -1,4 +1,6 @@
-package com.yyuze.invoker.schedule.anno;
+package com.yyuze.anno.system;
+
+import com.yyuze.enums.CommandEnum;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,13 +9,13 @@ import java.lang.annotation.Target;
 
 /**
  * Author: yyuze
- * Time: 2018-12-04
+ * Time: 2018-12-02
  */
 
-@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Schedule {
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Command {
 
-    long period();
+    CommandEnum value();
 
 }

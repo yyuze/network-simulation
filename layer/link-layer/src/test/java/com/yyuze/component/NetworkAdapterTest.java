@@ -1,4 +1,4 @@
-package com.yyuze.device;
+package com.yyuze.component;
 
 import com.yyuze.packet.EthernetFrame;
 import org.junit.jupiter.api.AfterAll;

@@ -1,6 +1,6 @@
-package com.yyuze.device;
+package com.yyuze.component;
 
-import com.yyuze.platform.anno.Layer;
+import com.yyuze.anno.platform.Layer;
 import com.yyuze.enums.LayerType;
 import com.yyuze.packet.EthernetFrame;
 

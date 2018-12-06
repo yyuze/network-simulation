@@ -1,4 +1,4 @@
-package com.yyuze.platform.anno;
+package com.yyuze.anno.platform;
 
 import com.yyuze.enums.LayerType;
 

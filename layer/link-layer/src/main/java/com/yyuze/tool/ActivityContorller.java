@@ -1,6 +1,6 @@
 package com.yyuze.tool;
 
-import com.yyuze.device.PhisicalLink;
+import com.yyuze.component.PhisicalLink;
 
 import java.util.Random;
 

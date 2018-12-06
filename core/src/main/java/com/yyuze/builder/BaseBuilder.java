@@ -1,10 +1,9 @@
 package com.yyuze.builder;
 
-import com.yyuze.invoker.command.CommandInvoker;
 import com.yyuze.enable.Assembleable;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.ArrayList;
 
 /**
  * Author: yyuze
@@ -12,10 +11,13 @@ import java.util.HashMap;
  */
 public abstract class BaseBuilder {
 
-    protected HashMap<String,Class> classMap;
+    protected ArrayList<Class> classes;
+
+    protected ArrayList<Object> instances;
 
     public BaseBuilder(){
-        this.classMap = new HashMap<>();
+        this.classes = new ArrayList<>();
+        this.instances = new ArrayList<>();
         String jarPath = this.getClass().getClassLoader().getResource("").getPath();
         this.loadClassesInJar(jarPath);
     }
@@ -31,7 +33,7 @@ public abstract class BaseBuilder {
                 if(fileName.contains(".class")){
                     try {
                         Class clz = this.getClassFromJavaFile(fullFilePath);
-                        this.classMap.put(clz.getName(),clz);
+                        this.classes.add(clz);
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
                     }
@@ -46,5 +48,13 @@ public abstract class BaseBuilder {
         return Class.forName(className);
     }
 
-    abstract Assembleable buildRuntimePlatform();
+    public ArrayList<Object> getInstancesOnPlatform(){
+        return this.instances;
+    }
+
+    public ArrayList<Class> getClassesOnPlatform(){
+        return this.classes;
+    }
+
+    protected abstract Assembleable buildRuntimePlatform();
 }
