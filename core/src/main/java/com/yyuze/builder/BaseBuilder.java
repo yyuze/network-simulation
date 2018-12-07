@@ -56,5 +56,5 @@ public abstract class BaseBuilder {
         return this.classes;
     }
 
-    protected abstract Assembleable buildRuntimePlatform();
+    protected abstract Assembleable buildRuntimePlatform(Class<? extends Assembleable> clz);
 }

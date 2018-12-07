@@ -7,10 +7,8 @@ import com.yyuze.component.PhisicalLink;
 import com.yyuze.component.Switch;
 import com.yyuze.enable.Assembleable;
 import com.yyuze.enums.CommandEnum;
-import com.yyuze.enums.LayerType;
 import com.yyuze.exception.PortFullOccupiedException;
 import com.yyuze.packet.EthernetFrame;
-import com.yyuze.anno.platform.Layer;
 import com.yyuze.anno.component.Link;
 import com.yyuze.tool.CRC;
 
@@ -22,17 +20,7 @@ import java.lang.reflect.InvocationTargetException;
  * Time: 2018-12-02
  */
 
-@Layer(LayerType.LINK)
-public class LinkLayerPlatform implements Assembleable {
-
-    @Link(serial = 0x00000001,MACs = {0x10000000,0x10000001,0x10000002},switchs = {0x20000001,0x20000002})
-    private PhisicalLink link1;
-
-    @Link(serial = 0x00000002,MACs = {0x10000003,0x10000004,0x10000005},switchs = {0x20000002,0x20000003})
-    private PhisicalLink link2;
-
-    @Link(serial = 0x00000003,MACs = {0x10000006,0x10000007,0x10000008},switchs = {0x20000003,0x20000001})
-    private PhisicalLink link3;
+public abstract class EmptyLinkLayerPlatform implements Assembleable {
 
     static public class Builder extends BaseBuilder {
 
@@ -41,18 +29,19 @@ public class LinkLayerPlatform implements Assembleable {
         }
 
         @Override
-        public LinkLayerPlatform buildRuntimePlatform() {
-            LinkLayerPlatform platform = new LinkLayerPlatform();
+        public Assembleable buildRuntimePlatform(Class<? extends Assembleable> clz) {
             try {
+                Assembleable platform = clz.getConstructor().newInstance();
                 this.connectLinksToPlatform(platform);
-            } catch (IllegalAccessException e) {
+                this.instances.add(platform);
+                return platform;
+            } catch (IllegalAccessException | NoSuchMethodException | InstantiationException | InvocationTargetException e) {
                 e.printStackTrace();
             }
-            this.instances.add(platform);
-            return platform;
+            return null;
         }
 
-        private void connectLinksToPlatform(LinkLayerPlatform platform) throws IllegalAccessException {
+        private void connectLinksToPlatform(Assembleable platform) throws IllegalAccessException {
             Field[] links = platform.getClass().getFields();
             for (Field link : links) {
                 Link anno = link.getAnnotation(Link.class);

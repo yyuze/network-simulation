@@ -1,4 +1,4 @@
-package com.yyuze.tool;
+package com.yyzue.tool;
 
 /**
  * Author: yyuze

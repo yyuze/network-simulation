@@ -17,6 +17,7 @@
         <module>network-layer</module>
         <module>transport-layer</module>
         <module>application-layer</module>
+        <module>layer-bridge</module>
     </modules>
 
 

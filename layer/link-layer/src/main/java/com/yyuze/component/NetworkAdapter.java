@@ -1,8 +1,6 @@
 package com.yyuze.component;
 
 import com.yyuze.anno.system.Schedule;
-import com.yyuze.anno.platform.Layer;
-import com.yyuze.enums.LayerType;
 import com.yyuze.exception.PacketTypeException;
 import com.yyuze.packet.BasePacket;
 import com.yyuze.packet.EthernetFrame;
@@ -21,8 +19,7 @@ import com.yyuze.tool.CRC;
  * 多路访问协议：CSMA/CD
  */
 
-@Layer(LayerType.LINK)
-public class NetworkAdapter extends BaseDevice<EthernetFrame>{
+public class NetworkAdapter extends BaseDevice<EthernetFrame> {
 
     private CRC crcTool;
 
@@ -56,7 +53,7 @@ public class NetworkAdapter extends BaseDevice<EthernetFrame>{
     }
 
     /**
-     * 提供给runtime平台调用构造基础网络的api
+     * 构造基础网络的api
      *
      * @param link
      */
@@ -66,22 +63,22 @@ public class NetworkAdapter extends BaseDevice<EthernetFrame>{
     }
 
     /**
-     * 该API由Runtime平台轮询调用
-     * 将需要往上层传递的帧发送到平台中
+     * 轮询调用
+     * 向网络层发送帧
      */
     @Schedule(period = 1000)
     @Override
     protected void sendToUpper() {
-        for (EthernetFrame frame:this.toUpperBuffer){
+        for (EthernetFrame frame : this.toUpperBuffer) {
             this.toUpperBuffer.addDeleteSignFor(frame);
-            this.platform.tansmitToUpper(this.MAC,frame);
+            this.bridge.tansmitToUpper(this.MAC, frame);
         }
         this.toUpperBuffer.clean();
     }
 
     /**
-     * 该API由Runtime平台轮询调用
-     * 将缓存区中的帧发送至链路
+     * 轮询调用
+     * 向链路中发送帧
      */
     @Schedule(period = 1000)
     @Override
@@ -106,39 +103,45 @@ public class NetworkAdapter extends BaseDevice<EthernetFrame>{
                     this.collisionCounter = 0;
                 }
             }
-         this.toLowerBuffer.clean();
+            this.toLowerBuffer.clean();
         }
     }
 
     /**
-     * 该API由Runtime平台通信时调用
-     * @param packet
-     * @param <T>
+     * 从网络层接收帧
+     *
+     * @param packet 接受的帧
+     * @param <T> 数据包的类型
      */
     @Override
     public <T extends BasePacket> void receiveFromUpper(T packet) throws PacketTypeException {
-        if(!packet.getClass().equals(EthernetFrame.class)){
+        if (!packet.getClass().equals(EthernetFrame.class)) {
             throw new PacketTypeException();
         }
-        EthernetFrame frame = (EthernetFrame)packet;
+        EthernetFrame frame = (EthernetFrame) packet;
         this.toLowerBuffer.add(frame);
     }
 
     /**
-     * 提供给链路向适配器发送数据时调用的api
-     *
-     * @param packet 从链路获取的帧
+     * 从链路中接收帧
+     * @param packet 接收的帧
+     * @param <T> 数据包类型
+     * @throws PacketTypeException
      */
     @Override
     protected <T extends BasePacket> void receiveFromLower(T packet) throws PacketTypeException {
-        if(!packet.getClass().equals(EthernetFrame.class)){
+        if (!packet.getClass().equals(EthernetFrame.class)) {
             throw new PacketTypeException();
         }
-        EthernetFrame frame = (EthernetFrame)packet;
+        EthernetFrame frame = (EthernetFrame) packet;
         if (frame.getTargetMAC() == this.MAC || frame.getTargetMAC() == 0xffffffff) {
             if (this.check(frame)) {
                 this.toUpperBuffer.add(frame);
             }
         }
+    }
+
+    public long getLinkSerial(){
+        return this.link.serial;
     }
 }

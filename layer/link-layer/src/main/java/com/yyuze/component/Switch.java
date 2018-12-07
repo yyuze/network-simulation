@@ -1,7 +1,6 @@
 package com.yyuze.component;
 
-import com.yyuze.anno.platform.Layer;
-import com.yyuze.enums.LayerType;
+import com.yyuze.anno.system.Schedule;
 import com.yyuze.exception.PortFullOccupiedException;
 import com.yyuze.packet.EthernetFrame;
 import com.yyuze.table.SwitchTable;
@@ -21,7 +20,6 @@ import java.util.Random;
  * 多路访问协议：CSMA/CD
  */
 
-@Layer(LayerType.LINK)
 public class Switch {
 
     public long serial;
@@ -136,6 +134,7 @@ public class Switch {
      * 如果目标MAC所在链路对应的端口记录不存在，则向其他端口广播
      * 如果目标MAC在其他端口对应的链路，则向那个端口转发
      */
+    @Schedule(period = 3000)
     public void transfer() {
         for (EthernetFrame frame : this.buffer) {
             this.buffer.addDeleteSignFor(frame);

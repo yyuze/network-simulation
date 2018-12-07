@@ -17,7 +17,6 @@ import java.util.Random;
  * 基础以太网链路
  */
 
-@Layer(LayerType.LINK)
 public class PhisicalLink {
 
     public long serial;

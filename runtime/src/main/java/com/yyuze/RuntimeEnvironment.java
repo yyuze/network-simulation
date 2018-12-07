@@ -4,6 +4,7 @@ import com.yyuze.anno.system.Command;
 import com.yyuze.enable.Assembleable;
 import com.yyuze.enums.LayerType;
 import com.yyuze.anno.platform.Layer;
+import com.yyuze.layer.LinkLayerPlatform;
 import com.yyuze.tool.Invoker;
 
 import java.lang.reflect.Method;
@@ -47,8 +48,8 @@ public class RuntimeEnvironment {
     }
 
     private void instanceLinkLayer() {
-        LinkLayerPlatform.Builder builder = new LinkLayerPlatform.Builder();
-        Assembleable linkLayerPlatform = builder.buildRuntimePlatform();
+        EmptyLinkLayerPlatform.Builder builder = new EmptyLinkLayerPlatform.Builder();
+        Assembleable linkLayerPlatform = builder.buildRuntimePlatform(LinkLayerPlatform.class);
         LayerType type = linkLayerPlatform.getClass().getAnnotation(Layer.class).value();
         this.platforms.put(type, linkLayerPlatform);
         this.instances.addAll(builder.getInstancesOnPlatform());

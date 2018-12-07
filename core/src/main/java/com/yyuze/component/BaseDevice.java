@@ -10,7 +10,7 @@ import com.yyuze.packet.BasePacket;
  */
 public abstract class BaseDevice <T extends BasePacket> {
 
-    protected UpwardTransmitable<T> platform;
+    protected UpwardTransmitable<T> bridge;
 
     protected abstract void sendToUpper();
 
@@ -20,7 +20,7 @@ public abstract class BaseDevice <T extends BasePacket> {
 
     protected abstract <T extends BasePacket> void receiveFromLower(T packet) throws PacketTypeException;
 
-    public void setPlatform(UpwardTransmitable<T> platform) {
-        this.platform = platform;
+    public void setBridge(UpwardTransmitable<T> bridge) {
+        this.bridge = bridge;
     }
 }
