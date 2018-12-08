@@ -1,6 +1,7 @@
 package com.yyuze.component;
 
 import com.yyuze.anno.platform.Layer;
+import com.yyuze.anno.system.Schedule;
 import com.yyuze.enums.LayerType;
 import com.yyuze.packet.EthernetFrame;
 
@@ -28,13 +29,13 @@ public class PhisicalLink {
      * MAC => position
      * 用MAC地址索引设备位置的MAP
      */
-    private HashMap<Long, Long> MAC2PositionMap;
+    private HashMap<Long, Integer> MAC2PositionMap;
 
     /**
      * position => position2DevicesMap
      * 用位置坐标索引在该位置的设备列表
      */
-    private HashMap<Long, ArrayList<NetworkAdapter>> position2DevicesMap;
+    private HashMap<Integer, ArrayList<NetworkAdapter>> position2DevicesMap;
 
     /**
      * 链路接入的交换机
@@ -49,12 +50,12 @@ public class PhisicalLink {
     /**
      * 链路起点
      */
-    private long start;
+    private int start;
 
     /**
      * 链路终点
      */
-    private long end;
+    private int end;
 
     /**
      * 链路传输帧时的传输模型
@@ -67,8 +68,8 @@ public class PhisicalLink {
         this.position2DevicesMap = new HashMap<>();
         this.switches = new ArrayList<>();
         this.random = new Random();
-        this.start = 0L;
-        this.end = 0L;
+        this.start = 0;
+        this.end = 0;
     }
 
     /**
@@ -141,7 +142,7 @@ public class PhisicalLink {
      * @param device 接入的设备
      */
     public void join(NetworkAdapter device) {
-        Long position = this.random.nextLong();
+        Integer position = this.random.nextInt(65535);
         if (!this.position2DevicesMap.containsKey(position)) {
             this.position2DevicesMap.put(position, new ArrayList<>());
         }
@@ -164,8 +165,8 @@ public class PhisicalLink {
         this.switches.add(device);
     }
 
-    private void sendFrameTo(EthernetFrame frame, long position) {
-        if (this.MAC2PositionMap.containsValue(position)) {
+    private void sendFrameTo(EthernetFrame frame, int position) {
+        if (this.MAC2PositionMap.containsValue(position)){
             ArrayList<NetworkAdapter> deviceList = this.position2DevicesMap.get(position);
             for (NetworkAdapter device : deviceList) {
                 try {
@@ -186,14 +187,22 @@ public class PhisicalLink {
      */
     private void boardcastFrameInLink(EthernetFrame ethernetFrame) {
         this.transferModel = new BitTransferModel(ethernetFrame);
-        Long position = this.MAC2PositionMap.get(ethernetFrame.getSourceMAC());
-        Long toHeadIndex = position - 1;
-        Long toTailIndex = position + 1;
-        while (toHeadIndex >= this.start || toTailIndex <= this.end) {
+        Integer position = this.MAC2PositionMap.get(ethernetFrame.getSourceMAC());
+        int toHeadIndex = position - 1;
+        int toTailIndex = position + 1;
+        boolean arrivedHead = toHeadIndex < this.start;
+        boolean arrivedTail = toTailIndex > this.end;
+        while (!arrivedHead || !arrivedTail) {
+            arrivedHead = toHeadIndex < this.start;
+            arrivedTail = toTailIndex > this.end;
             this.sendFrameTo(ethernetFrame, toHeadIndex);
             this.sendFrameTo(ethernetFrame, toTailIndex);
-            toTailIndex++;
-            toHeadIndex--;
+            if(!arrivedTail){
+                toTailIndex++;
+            }
+            if(!arrivedHead){
+                toHeadIndex--;
+            }
         }
         for (Switch device : this.switches) {
             device.receive(ethernetFrame);
@@ -206,6 +215,9 @@ public class PhisicalLink {
      * @return 链路的状态
      */
     public boolean willOccurCollision(EthernetFrame frame) {
+        if(this.transferModel==null){
+            return false;
+        }
         return this.transferModel.forecastCollision(new BitTransferModel(frame));
     }
 

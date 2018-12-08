@@ -26,8 +26,12 @@ public class Buffer <T extends BasePacket> extends ArrayList<T>{
     }
 
     public void clean(){
+        ArrayList<T> b = new ArrayList<>();
         for(int i: this.deleteSign){
-            this.remove(i);
+            b.add(this.get(i));
+        }
+        for(T obj : b){
+            this.remove(b);
         }
         this.deleteSign = new ArrayList<>();
     }

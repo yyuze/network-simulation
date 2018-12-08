@@ -85,6 +85,12 @@ public class NetworkAdapter extends BaseDevice<EthernetFrame> {
     protected void sendToLower() {
         if (this.activityContorller.isAllowedTransfer()) {
             for (EthernetFrame frame : this.toLowerBuffer) {
+                /**
+                 * frame的 payload 和 targetMAC 通过平台设置
+                 */
+                frame.setSourceMAC(this.MAC);
+                frame.setType(0x0800);
+                frame.setCRC(this.generateCRC(frame));
                 this.toLowerBuffer.addDeleteSignFor(frame);
                 if (this.link.willOccurCollision(frame)) {
                     this.collisionCounter++;
@@ -92,12 +98,6 @@ public class NetworkAdapter extends BaseDevice<EthernetFrame> {
                     this.toLowerBuffer.removeDeleteSignFor(frame);
                     break;
                 } else {
-                    /**
-                     * frame的 payload 和 targetMAC 通过平台设置
-                     */
-                    frame.setSourceMAC(this.MAC);
-                    frame.setType(0x0800);
-                    frame.setCRC(this.generateCRC(frame));
                     this.link.receive(frame);
                     this.activityContorller.reset();
                     this.collisionCounter = 0;
