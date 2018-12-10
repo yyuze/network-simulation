@@ -20,12 +20,14 @@ public class Invoker {
         this.method = method;
     }
 
-    public void invoke(Object... args) {
+    public boolean invoke(Object... args) {
         try {
             this.method.invoke(this.invokeObj, args);
         } catch (IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
 
