@@ -23,5 +23,7 @@ public enum CommandEnum {
      */
     link_rcv,
 
+    shut_down
+
 
 }

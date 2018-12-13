@@ -1,6 +1,6 @@
 package com;
 
-import com.yyuze.RuntimeEnvironment;
+import com.yyuze.VirtualNetworkSimulation;
 
 /**
  * Author: yyuze
@@ -9,7 +9,7 @@ import com.yyuze.RuntimeEnvironment;
 public class Starter {
 
     public static void main(String[] args){
-        new RuntimeEnvironment().start();
+        new VirtualNetworkSimulation().start();
     }
 
 }

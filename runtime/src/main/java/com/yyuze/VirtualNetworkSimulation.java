@@ -7,6 +7,8 @@ import com.yyuze.enums.LayerType;
 import com.yyuze.anno.platform.Layer;
 import com.yyuze.layer.LinkLayerPlatform;
 import com.yyuze.system.CommandTask;
+import com.yyuze.system.ScheduleTask;
+import com.yyuze.tool.Console;
 import com.yyuze.tool.Invoker;
 
 import java.lang.reflect.Method;
@@ -15,13 +17,15 @@ import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Author: yyuze
  * Time: 2018-12-02
  */
-public class RuntimeEnvironment {
+public class VirtualNetworkSimulation {
 
     private HashMap<LayerType, Assembleable> platforms;
 
@@ -37,13 +41,40 @@ public class RuntimeEnvironment {
 
     private final ReentrantLock commandLock = new ReentrantLock();
 
+    private final Condition terminate = commandLock.newCondition();
+
     private final ReentrantLock scheduleLock = new ReentrantLock();
 
+    private final Console console = new Console();
+
     public void start() {
-        this.threadPoor.execute(new CommandTask(commandLock,this.commandInvokers));
+        CommandTask commandTask = new CommandTask(this.commandLock,terminate,this.commandInvokers, console);
+        ScheduleTask scheduleTask = new ScheduleTask(this.scheduleLock,this.scheduleInvokers,console);
+        this.threadPoor.execute(commandTask);
+        this.threadPoor.execute(scheduleTask);
+        this.threadPoor.execute(()->{
+            /**
+             * deamon thread
+             */
+            final Lock lock = commandLock;
+            lock.lock();
+            try {
+                terminate.await();
+                scheduleTask.terminate();
+                commandTask.terminate();
+                this.console.write("System is shutting down");
+                this.threadPoor.shutdown();
+                this.console.write("good bye");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                lock.unlock();
+            }
+        });
+
     }
 
-    public RuntimeEnvironment() {
+    public VirtualNetworkSimulation() {
         this.platforms = new HashMap<>();
         this.instances = new ArrayList<>();
         this.classes = new ArrayList<>();
@@ -120,7 +151,7 @@ public class RuntimeEnvironment {
         int maximumPoolSize = 4;
         long keepAliveTime = 500;
         TimeUnit unit = TimeUnit.MILLISECONDS;
-        int queueCapacity = 4;
+        int queueCapacity = 8;
         this.threadPoor = new ThreadPoolExecutor(corePoolSize,maximumPoolSize,keepAliveTime,unit, new ArrayBlockingQueue<>(queueCapacity));
     }
 

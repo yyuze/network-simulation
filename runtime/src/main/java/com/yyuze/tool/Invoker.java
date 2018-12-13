@@ -30,5 +30,8 @@ public class Invoker {
         return true;
     }
 
+    public String getMethodName(){
+        return this.method.getName();
+    }
 
 }

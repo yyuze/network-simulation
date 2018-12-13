@@ -1,8 +1,9 @@
 package com.yyuze.system;
 
+import com.yyuze.enums.CommandEnum;
+import com.yyuze.tool.Console;
 import com.yyuze.tool.Invoker;
 
-import java.io.*;
 import java.util.HashMap;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -11,15 +12,8 @@ import java.util.concurrent.locks.Lock;
  * Author: yyuze
  * Time: 2018-12-06
  */
-public class CommandTask implements Runnable {
+public class CommandTask extends BaseTask{
 
-    private final Lock lock;
-
-    private Condition condition;
-
-    private final HashMap<String, Invoker> commandInvokers;
-
-    private final Console console = new Console();
 
     private final String ILLEGAL_COMMAND = "illegal command,input --help to get command list.";
 
@@ -31,45 +25,32 @@ public class CommandTask implements Runnable {
 
     private final String SUCCESS = "command executed";
 
-    public CommandTask(Lock lock, HashMap<String, Invoker> invokers) {
-        this.lock = lock;
-        this.condition = lock.newCondition();
-        this.commandInvokers = invokers;
-    }
+    private final Condition terminate;
 
-    private final class Console {
-
-        private BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-        private BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
-
-        public void write(String str) {
-            try {
-                this.writer.write(str);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public String read() {
-            try {
-                return this.reader.readLine();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
+    public CommandTask(Lock lock, Condition terminate, HashMap<String, Invoker> invokers, Console console) {
+        super(lock,console,invokers);
+        this.terminate = terminate;
     }
 
     @Override
     public void run() {
         final Lock lock = this.lock;
-        lock.lock();
         try {
-            while (true) {
+            lock.lockInterruptibly();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        try {
+            while (this.run) {
                 this.console.write(this.WELCOME_INFO);
                 String command = this.console.read();
-                if (!this.commandInvokers.containsKey(command)) {
+                /**
+                 * 关闭程序
+                 */
+                if(command.equals(CommandEnum.shut_down.toString())){
+                    this.terminate.signalAll();
+                }
+                if (!this.invokers.containsKey(command)) {
                     this.console.write(this.ILLEGAL_COMMAND);
                     continue;
                 } else {
@@ -78,17 +59,19 @@ public class CommandTask implements Runnable {
                     String line = this.console.read();
                     while (!line.equals("")) {
                         paras += line + "\n";
+                        line = this.console.read();
                     }
                     /**
                      * 该线程堵塞至一条命令执行完
                      */
-                    if (!this.commandInvokers.get(command).invoke(paras)) {
+                    if (!((Invoker)this.invokers.get(command)).invoke(paras)) {
                         this.console.write(this.ERROR_INPUT);
                     } else {
                         this.console.write(this.SUCCESS);
                     }
                 }
             }
+            this.console.write("Command System is shutting down");
         } finally {
             lock.unlock();
         }
