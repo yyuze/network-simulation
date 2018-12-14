@@ -12,6 +12,7 @@
         <module>core</module>
         <module>layer</module>
         <module>runtime</module>
+        <module>demo</module>
     </modules>
 
     <build>

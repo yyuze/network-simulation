@@ -5,7 +5,6 @@ import com.yyuze.anno.system.Schedule;
 import com.yyuze.enable.Assembleable;
 import com.yyuze.enums.LayerType;
 import com.yyuze.anno.platform.Layer;
-import com.yyuze.layer.LinkLayerPlatform;
 import com.yyuze.system.CommandTask;
 import com.yyuze.system.ScheduleTask;
 import com.yyuze.tool.Console;
@@ -78,13 +77,13 @@ public class VirtualNetworkSimulation {
         });
     }
 
-    public VirtualNetworkSimulation() {
+    public VirtualNetworkSimulation(Class linkLayer,Class networkLayer,Class tansportLayer,Class applicationLayer) {
         this.platforms = new HashMap<>();
         this.instances = new ArrayList<>();
         this.classes = new ArrayList<>();
         this.commandInvokers = new HashMap<>();
         this.scheduleInvokers = new HashMap<>();
-        this.initPlatforms();
+        this.initPlatforms(linkLayer,networkLayer,tansportLayer,applicationLayer);
         this.initCommandInvokers();
         this.initScheduleInvokers();
         this.initThreadPoor();
@@ -95,32 +94,32 @@ public class VirtualNetworkSimulation {
         ++this.runningAmount;
     }
 
-    private void initPlatforms() {
-        this.instanceLinkLayer();
-        this.instanceNetworkLayer();
-        this.instanceTransportLayer();
-        this.instanceApplicationLayer();
+    private void initPlatforms(Class linkLayer,Class networkLayer,Class tansportLayer,Class applicationLayer) {
+        this.instanceLinkLayer(linkLayer);
+        this.instanceNetworkLayer(networkLayer);
+        this.instanceTransportLayer(tansportLayer);
+        this.instanceApplicationLayer(applicationLayer);
 
     }
 
-    private void instanceLinkLayer() {
+    private <L extends EmptyLinkLayerPlatform> void instanceLinkLayer(Class<L> clz) {
         EmptyLinkLayerPlatform.Builder builder = new EmptyLinkLayerPlatform.Builder();
-        Assembleable linkLayerPlatform = builder.buildRuntimePlatform(LinkLayerPlatform.class);
+        Assembleable linkLayerPlatform = builder.buildRuntimePlatform(clz);
         LayerType type = linkLayerPlatform.getClass().getAnnotation(Layer.class).value();
         this.platforms.put(type, linkLayerPlatform);
         this.instances.addAll(builder.getInstancesOnPlatform());
         this.classes.addAll(builder.getClassesOnPlatform());
     }
 
-    private void instanceNetworkLayer() {
+    private <L extends Assembleable> void instanceNetworkLayer(Class<L> clz) {
         //todo 初始化网络层
     }
 
-    private void instanceTransportLayer() {
+    private <L extends Assembleable> void instanceTransportLayer(Class<L> clz) {
         //todo 初始化运输层
     }
 
-    private void instanceApplicationLayer() {
+    private <L extends Assembleable> void instanceApplicationLayer(Class<L> clz) {
         //todo 初始化应用层
     }
 

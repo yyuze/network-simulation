@@ -1,6 +1,7 @@
 package com;
 
 import com.yyuze.VirtualNetworkSimulation;
+import com.yyuze.layer.LinkLayerPlatform;
 
 /**
  * Author: yyuze
@@ -9,7 +10,7 @@ import com.yyuze.VirtualNetworkSimulation;
 public class Starter {
 
     public static void main(String[] args){
-        new VirtualNetworkSimulation().start();
+        new VirtualNetworkSimulation(LinkLayerPlatform.class,null,null,null).start();
     }
 
 }
