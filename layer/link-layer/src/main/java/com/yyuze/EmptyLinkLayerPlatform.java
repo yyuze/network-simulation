@@ -42,7 +42,7 @@ public abstract class EmptyLinkLayerPlatform implements Assembleable {
         }
 
         private void connectLinksToPlatform(Assembleable platform) throws IllegalAccessException {
-            Field[] links = platform.getClass().getFields();
+            Field[] links = platform.getClass().getDeclaredFields();
             for (Field link : links) {
                 Link anno = link.getAnnotation(Link.class);
                 if (anno == null) {
@@ -50,6 +50,7 @@ public abstract class EmptyLinkLayerPlatform implements Assembleable {
                 }
                 long serial = anno.serial();
                 PhisicalLink linkInstance = new PhisicalLink(serial);
+                link.setAccessible(true);
                 link.set(platform, linkInstance);
                 this.accessMACsToLink(linkInstance, anno.MACs());
                 try {

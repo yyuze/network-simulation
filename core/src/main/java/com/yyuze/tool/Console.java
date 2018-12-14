@@ -12,25 +12,23 @@ public final class Console {
 
     private final ReentrantLock lock = new ReentrantLock();
 
-
     private BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-    private BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
+    private PrintStream writer = System.out;
 
     public void write(String str) {
         final Lock lock = this.lock;
         lock.lock();
         try {
-            this.writer.write(str);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }finally {
+            this.writer.println(str);
+        } finally {
             lock.unlock();
         }
     }
 
     public String read() {
         final Lock lock = this.lock;
+        lock.lock();
         try {
             return this.reader.readLine();
         } catch (IOException e) {

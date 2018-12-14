@@ -18,6 +18,7 @@ public class Invoker {
     public Invoker(Object invokeObj, Method method) {
         this.invokeObj = invokeObj;
         this.method = method;
+        this.method.setAccessible(true);
     }
 
     public boolean invoke(Object... args) {

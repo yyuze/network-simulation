@@ -39,30 +39,29 @@ public class VirtualNetworkSimulation {
 
     private ThreadPoolExecutor threadPoor;
 
-    private final ReentrantLock commandLock = new ReentrantLock();
+    private final ReentrantLock deamonLock = new ReentrantLock();
 
-    private final Condition terminate = commandLock.newCondition();
-
-    private final ReentrantLock scheduleLock = new ReentrantLock();
+    private final Condition terminate = deamonLock.newCondition();
 
     private final Console console = new Console();
 
     public void start() {
-        CommandTask commandTask = new CommandTask(this.commandLock,terminate,this.commandInvokers, console);
-        ScheduleTask scheduleTask = new ScheduleTask(this.scheduleLock,this.scheduleInvokers,console);
+        CommandTask commandTask = new CommandTask(this.deamonLock,terminate,this.commandInvokers, console);
+        ScheduleTask scheduleTask = new ScheduleTask(this.deamonLock,this.scheduleInvokers,console);
         this.threadPoor.execute(commandTask);
         this.threadPoor.execute(scheduleTask);
         this.threadPoor.execute(()->{
             /**
              * deamon thread
              */
-            final Lock lock = commandLock;
+            final Lock lock = this.deamonLock;
             lock.lock();
             try {
                 terminate.await();
                 scheduleTask.terminate();
                 commandTask.terminate();
                 this.console.write("System is shutting down");
+                terminate.signal();
                 this.threadPoor.shutdown();
                 this.console.write("good bye");
             } catch (InterruptedException e) {

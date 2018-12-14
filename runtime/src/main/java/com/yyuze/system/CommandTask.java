@@ -12,7 +12,7 @@ import java.util.concurrent.locks.Lock;
  * Author: yyuze
  * Time: 2018-12-06
  */
-public class CommandTask extends BaseTask{
+public class CommandTask extends BaseTask {
 
 
     private final String ILLEGAL_COMMAND = "illegal command,input --help to get command list.";
@@ -28,52 +28,56 @@ public class CommandTask extends BaseTask{
     private final Condition terminate;
 
     public CommandTask(Lock lock, Condition terminate, HashMap<String, Invoker> invokers, Console console) {
-        super(lock,console,invokers);
+        super(lock, console, invokers);
         this.terminate = terminate;
+    }
+
+    private void signalToShutdown() {
+        final Lock lock = this.lock;
+        lock.tryLock();
+        try {
+            this.terminate.signal();
+            this.terminate.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
     public void run() {
-        final Lock lock = this.lock;
-        try {
-            lock.lockInterruptibly();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        try {
-            while (this.run) {
-                this.console.write(this.WELCOME_INFO);
-                String command = this.console.read();
-                /**
-                 * 关闭程序
-                 */
-                if(command.equals(CommandEnum.shut_down.toString())){
-                    this.terminate.signalAll();
+        while (this.run) {
+            this.console.write(this.WELCOME_INFO);
+            //System.out.println(this.WELCOME_INFO);
+            String command = this.console.read();
+            /**
+             * 关闭程序
+             */
+            if (command.equals(CommandEnum.shut_down.toString())) {
+                this.signalToShutdown();
+                continue;
+            }
+            if (!this.invokers.containsKey(command)) {
+                this.console.write(this.ILLEGAL_COMMAND);
+            } else {
+                this.console.write(this.DETAIL_INPUT);
+                String paras = "";
+                String line = this.console.read();
+                while (!line.equals("")) {
+                    paras += line + "\n";
+                    line = this.console.read();
                 }
-                if (!this.invokers.containsKey(command)) {
-                    this.console.write(this.ILLEGAL_COMMAND);
-                    continue;
+                /**
+                 * 该线程堵塞至一条命令执行完
+                 */
+                if (!((Invoker) this.invokers.get(command)).invoke(paras)) {
+                    this.console.write(this.ERROR_INPUT);
                 } else {
-                    this.console.write(this.DETAIL_INPUT);
-                    String paras = "";
-                    String line = this.console.read();
-                    while (!line.equals("")) {
-                        paras += line + "\n";
-                        line = this.console.read();
-                    }
-                    /**
-                     * 该线程堵塞至一条命令执行完
-                     */
-                    if (!((Invoker)this.invokers.get(command)).invoke(paras)) {
-                        this.console.write(this.ERROR_INPUT);
-                    } else {
-                        this.console.write(this.SUCCESS);
-                    }
+                    this.console.write(this.SUCCESS);
                 }
             }
-            this.console.write("Command System is shutting down");
-        } finally {
-            lock.unlock();
         }
+        this.console.write("Command System is shutting down");
     }
 }
