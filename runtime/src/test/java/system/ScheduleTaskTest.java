@@ -35,11 +35,11 @@ public class ScheduleTaskTest {
 //
 //        ThreadPoolExecutor pool = new ThreadPoolExecutor(corePoolSize,maximumPoolSize,keepAliveTime,timeUnit,new ArrayBlockingQueue<>(maximumPoolSize));
 //
-//        ReentrantLock lock = new ReentrantLock();
-//        Condition condition = lock.newCondition();
+//        ReentrantLock deamonLock = new ReentrantLock();
+//        Condition condition = deamonLock.newCondition();
 //        pool.execute(()->{
 //            try {
-//                lock.lock();
+//                deamonLock.deamonLock();
 //                System.out.println("i am thread 1, i m going to sleep");
 //                condition.await();
 //                System.out.println("i am thread 1, i m awake");
@@ -50,12 +50,12 @@ public class ScheduleTaskTest {
 //            } catch (InterruptedException e) {
 //                e.printStackTrace();
 //            }finally {
-//                lock.unlock();
+//                deamonLock.unlock();
 //            }
 //        });
 //
 //        pool.submit(()->{
-//            lock.lock();
+//            deamonLock.deamonLock();
 //            try{
 //                long start = System.currentTimeMillis();
 //                int i = 1;
@@ -71,7 +71,7 @@ public class ScheduleTaskTest {
 //                }
 //                condition.signal();
 //            }finally {
-//                lock.unlock();
+//                deamonLock.unlock();
 //            }
 //        });
 //

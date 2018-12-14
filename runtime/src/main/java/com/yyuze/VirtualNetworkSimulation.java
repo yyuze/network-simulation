@@ -35,9 +35,11 @@ public class VirtualNetworkSimulation {
 
     private HashMap<String, Invoker> commandInvokers;
 
-    private HashMap<Long,ArrayList<Invoker>> scheduleInvokers;
+    private HashMap<Long, ArrayList<Invoker>> scheduleInvokers;
 
     private ThreadPoolExecutor threadPoor;
+
+    private int runningAmount = 0;
 
     private final ReentrantLock deamonLock = new ReentrantLock();
 
@@ -46,11 +48,11 @@ public class VirtualNetworkSimulation {
     private final Console console = new Console();
 
     public void start() {
-        CommandTask commandTask = new CommandTask(this.deamonLock,terminate,this.commandInvokers, console);
-        ScheduleTask scheduleTask = new ScheduleTask(this.deamonLock,this.scheduleInvokers,console);
-        this.threadPoor.execute(commandTask);
-        this.threadPoor.execute(scheduleTask);
-        this.threadPoor.execute(()->{
+        CommandTask commandTask = new CommandTask(this.deamonLock, terminate, this.commandInvokers, console);
+        ScheduleTask scheduleTask = new ScheduleTask(this.deamonLock, terminate, this.scheduleInvokers, console);
+        this.startTask(commandTask);
+        this.startTask(scheduleTask);
+        this.threadPoor.execute(() -> {
             /**
              * deamon thread
              */
@@ -62,6 +64,10 @@ public class VirtualNetworkSimulation {
                 commandTask.terminate();
                 this.console.write("System is shutting down");
                 terminate.signal();
+                while (this.runningAmount != 0) {
+                    terminate.await();
+                    --this.runningAmount;
+                }
                 this.threadPoor.shutdown();
                 this.console.write("good bye");
             } catch (InterruptedException e) {
@@ -70,7 +76,6 @@ public class VirtualNetworkSimulation {
                 lock.unlock();
             }
         });
-
     }
 
     public VirtualNetworkSimulation() {
@@ -85,6 +90,10 @@ public class VirtualNetworkSimulation {
         this.initThreadPoor();
     }
 
+    private void startTask(Runnable task) {
+        this.threadPoor.execute(task);
+        ++this.runningAmount;
+    }
 
     private void initPlatforms() {
         this.instanceLinkLayer();
@@ -115,17 +124,17 @@ public class VirtualNetworkSimulation {
         //todo 初始化应用层
     }
 
-    private void initScheduleInvokers(){
-        for(Object instance:this.instances){
+    private void initScheduleInvokers() {
+        for (Object instance : this.instances) {
             Method[] methods = instance.getClass().getDeclaredMethods();
-            for(Method method:methods){
+            for (Method method : methods) {
                 Schedule anno = method.getAnnotation(Schedule.class);
-                if(anno != null){
+                if (anno != null) {
                     long invokePeriod = anno.period();
-                    if(!this.scheduleInvokers.containsKey(invokePeriod)){
-                        this.scheduleInvokers.put(invokePeriod,new ArrayList<>());
+                    if (!this.scheduleInvokers.containsKey(invokePeriod)) {
+                        this.scheduleInvokers.put(invokePeriod, new ArrayList<>());
                     }
-                    Invoker invoker = new Invoker(instance,method);
+                    Invoker invoker = new Invoker(instance, method);
                     this.scheduleInvokers.get(invokePeriod).add(invoker);
                 }
             }
@@ -133,25 +142,25 @@ public class VirtualNetworkSimulation {
     }
 
     private void initCommandInvokers() {
-        this.platforms.forEach((type,platform)->{
+        this.platforms.forEach((type, platform) -> {
             Method[] methods = platform.getClass().getDeclaredMethods();
-            for(Method method:methods){
+            for (Method method : methods) {
                 Command anno = method.getAnnotation(Command.class);
-                if(anno!=null){
-                    Invoker invoker = new Invoker(platform,method);
-                    this.commandInvokers.put(anno.value().toString(),invoker);
+                if (anno != null) {
+                    Invoker invoker = new Invoker(platform, method);
+                    this.commandInvokers.put(anno.value().toString(), invoker);
                 }
             }
         });
     }
 
-    private void initThreadPoor(){
+    private void initThreadPoor() {
         int corePoolSize = 3;
         int maximumPoolSize = 4;
         long keepAliveTime = 500;
         TimeUnit unit = TimeUnit.MILLISECONDS;
         int queueCapacity = 8;
-        this.threadPoor = new ThreadPoolExecutor(corePoolSize,maximumPoolSize,keepAliveTime,unit, new ArrayBlockingQueue<>(queueCapacity));
+        this.threadPoor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, unit, new ArrayBlockingQueue<>(queueCapacity));
     }
 
 }

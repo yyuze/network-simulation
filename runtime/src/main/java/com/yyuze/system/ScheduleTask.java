@@ -6,6 +6,7 @@ import com.yyuze.tool.Invoker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
 /**
@@ -14,16 +15,16 @@ import java.util.concurrent.locks.Lock;
  */
 public class ScheduleTask extends BaseTask {
 
-    public ScheduleTask(Lock lock, HashMap<Long, ArrayList<Invoker>> scheduleInvokers, Console console) {
-        super(lock, console, scheduleInvokers);
+    public ScheduleTask(Lock lock, Condition terminate, HashMap<Long, ArrayList<Invoker>> scheduleInvokers, Console console) {
+        super(lock, terminate, console, scheduleInvokers);
     }
 
     @Override
     public void run() {
         ArrayList<Long> schedules = new ArrayList<>();
         schedules.addAll(this.invokers.keySet());
+        int index = 0;
         while (this.run) {
-            int index = 0;
             try {
                 Long schedule = schedules.get(index);
                 Thread.sleep(schedule);
@@ -40,6 +41,7 @@ public class ScheduleTask extends BaseTask {
                 index = 0;
             }
         }
-        this.console.write("schedule system is shutting down");
+        this.console.write("schedule system shutted down");
+        this.signalShuttedDown();
     }
 }

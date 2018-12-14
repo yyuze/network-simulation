@@ -25,24 +25,8 @@ public class CommandTask extends BaseTask {
 
     private final String SUCCESS = "command executed";
 
-    private final Condition terminate;
-
-    public CommandTask(Lock lock, Condition terminate, HashMap<String, Invoker> invokers, Console console) {
-        super(lock, console, invokers);
-        this.terminate = terminate;
-    }
-
-    private void signalToShutdown() {
-        final Lock lock = this.lock;
-        lock.tryLock();
-        try {
-            this.terminate.signal();
-            this.terminate.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
-        }
+    public CommandTask(Lock deamonLock, Condition terminate, HashMap<String, Invoker> invokers, Console console) {
+        super(deamonLock, terminate, console, invokers);
     }
 
     @Override
@@ -78,6 +62,7 @@ public class CommandTask extends BaseTask {
                 }
             }
         }
-        this.console.write("Command System is shutting down");
+        this.console.write("Command System shutted down");
+        this.signalShuttedDown();
     }
 }
