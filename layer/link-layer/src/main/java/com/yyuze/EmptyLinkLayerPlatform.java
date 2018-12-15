@@ -9,7 +9,7 @@ import com.yyuze.enable.Assembleable;
 import com.yyuze.enums.CommandEnum;
 import com.yyuze.exception.PortFullOccupiedException;
 import com.yyuze.packet.EthernetFrame;
-import com.yyuze.anno.component.Link;
+import com.yyuze.anno.component.LinkInit;
 import com.yyuze.tool.CRC;
 
 import java.lang.reflect.Field;
@@ -44,7 +44,7 @@ public abstract class EmptyLinkLayerPlatform implements Assembleable {
         private void connectLinksToPlatform(Assembleable platform) throws IllegalAccessException {
             Field[] links = platform.getClass().getDeclaredFields();
             for (Field link : links) {
-                Link anno = link.getAnnotation(Link.class);
+                LinkInit anno = link.getAnnotation(LinkInit.class);
                 if (anno == null) {
                     continue;
                 }
@@ -99,7 +99,7 @@ public abstract class EmptyLinkLayerPlatform implements Assembleable {
         frame.setCRC(new CRC().generateCRC(payload));
         Field[] fields = this.getClass().getDeclaredFields();
         for(Field field:fields){
-            Link anno = field.getAnnotation(Link.class);
+            LinkInit anno = field.getAnnotation(LinkInit.class);
             long macs[] = anno.MACs();
             for(long mac:macs){
                 if(mac==source){

@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Link {
+public @interface LinkInit {
 
     /**
      * 链路序列号

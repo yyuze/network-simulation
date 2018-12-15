@@ -4,7 +4,7 @@ package com.yyuze.packet;
  * Author: yyuze
  * Time: 2018-11-29
  */
-public class IPv4Packet extends BasePacket {
+public class Datagram extends BasePacket {
 
     /**
      * 协议版本

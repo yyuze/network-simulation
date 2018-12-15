@@ -6,8 +6,8 @@ import com.yyuze.enable.DownwardTransmitable;
 import com.yyuze.enable.UpwardTransmitable;
 import com.yyuze.exception.PacketTypeException;
 import com.yyuze.packet.EthernetFrame;
-import com.yyuze.packet.IPv4Packet;
-import com.yyzue.tool.ARPTable;
+import com.yyuze.packet.Datagram;
+import com.yyzue.tool.ARP;
 
 
 import java.util.HashMap;
@@ -16,23 +16,23 @@ import java.util.HashMap;
  * Author: yyuze
  * Time: 2018-12-05
  */
-public class LinkLayerAndNetworkLayer implements DownwardTransmitable<IPv4Packet>, UpwardTransmitable<EthernetFrame> {
+public class LinkLayerAndNetworkLayer implements DownwardTransmitable<Datagram>, UpwardTransmitable<EthernetFrame> {
 
 
     /**
      * 模拟分布式的ARP工具，Key是设备MAC地址
      */
-    HashMap<Long, ARPTable> arptools;
+    HashMap<Long, ARP> arptools;
 
     HashMap<Long, NetworkAdapter> adapters;
 
     HashMap<Long, Router> routers;
 
     @Override
-    public void tansmitToLower(long MAC,IPv4Packet packet) {
+    public void tansmitToLower(long MAC, Datagram packet) {
         EthernetFrame frame = new EthernetFrame();
         frame.setPayload(packet.toString());
-        ARPTable arptool = this.arptools.get(MAC);
+        ARP arptool = this.arptools.get(MAC);
         long mac = arptool.getMACByIP(packet.getTargetIP());
         if(mac != -1){
             frame.setTargetMAC(mac);
@@ -56,7 +56,7 @@ public class LinkLayerAndNetworkLayer implements DownwardTransmitable<IPv4Packet
         }
     }
 
-    private IPv4Packet convertFrameToIpPacket(EthernetFrame frame){
+    private Datagram convertFrameToIpPacket(EthernetFrame frame){
         //todo
         return null;
     }

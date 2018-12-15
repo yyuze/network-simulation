@@ -12,11 +12,11 @@ import java.util.ArrayList;
 /**
  * Address Resolution Protocol
  */
-public class ARPTable {
+public class ARP {
     
     ArrayList<ARPItem> table;
     
-    public ARPTable(){
+    public ARP(){
         this.table = new ArrayList<>();
     }
 
